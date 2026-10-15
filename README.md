@@ -1,3 +1,6 @@
+> [!WARNING]
+> **Not verified by Apple or Microsoft yet.** Portkeeper has no developer certificate for now, so macOS and Windows show a one-time warning when you first open it. That is expected and the app is safe: every build comes from the public code in this repository through GitHub Actions. Two clicks get past the warning (see [Install](#install)), or use the one-command install below, which shows no dialog at all. The warning disappears once the app is notarized.
+
 <p align="center">
   <img src="docs/active.png" width="370" alt="Portkeeper: projects, their ports, the agent that started them, and a status dot for each" />
 </p>
