@@ -57,7 +57,11 @@ header .grow { flex: 1; align-self: stretch; }
 .ico.gear { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1c.5.4 1.1.7 1.7 1l.4 2.5h4l.4-2.5c.6-.3 1.2-.6 1.7-1l2.4 1 2-3.4-2-1.6zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z'/%3E%3C/svg%3E"); }
 .ico.lock { width: 10px; height: 10px; --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17 10V7A5 5 0 0 0 7 7v3H5v12h14V10h-2zM9 7a3 3 0 0 1 6 0v3H9V7z'/%3E%3C/svg%3E"); }
 .ico.unlock { width: 10px; height: 10px; --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 10V7a3 3 0 0 1 5.8-1l1.9-.7A5 5 0 0 0 7 7v3H5v12h14V10H9z'/%3E%3C/svg%3E"); }
-.ico.down { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5.3 8.3a1 1 0 0 1 1.4 0L12 13.6l5.3-5.3a1 1 0 1 1 1.4 1.4l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 0 1 0-1.4z'/%3E%3C/svg%3E"); }
+.ico.down { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 9l6.5 6.5L18.5 9'/%3E%3C/svg%3E"); }
+.ico.stop { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4.5' y='4.5' width='15' height='15' rx='3.5'/%3E%3C/svg%3E"); }
+.ico.play { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 4.8v14.4c0 .9 1 1.5 1.8 1l11.5-7.2c.7-.5.7-1.5 0-2L8.8 3.8C8 3.3 7 3.9 7 4.8z'/%3E%3C/svg%3E"); }
+.ico.x { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E"); }
+.ico.min { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4' y='10.4' width='16' height='3.2' rx='1.6'/%3E%3C/svg%3E"); }
 
 ul { list-style: none; }
 #list { padding: 0 6px 6px; max-height: 440px; overflow-y: auto; }
@@ -94,14 +98,18 @@ ul { list-style: none; }
 @media (prefers-reduced-motion: reduce) { .dot.warn::after { animation: none; } }
 
 .chev { width: 10px; flex: none; display: grid; place-items: center; color: var(--dim); }
-.chev .ico { width: 9px; height: 9px; transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
+.chev .ico { width: 10px; height: 10px; transition: transform .2s cubic-bezier(.2, .8, .2, 1); }
 .row.multi:hover .chev { color: var(--fg); }
 .open > .row .chev .ico { transform: rotate(180deg); }
 
 .act { display: flex; align-items: center; gap: 1px; }
 .act.hov { display: none; }
 .row:hover .act.hov { display: flex; }
-.act button { height: 20px; min-width: 20px; padding: 0 5px; border-radius: 5px; color: var(--dim); font-size: 11px; }
+.act button { height: 20px; min-width: 20px; padding: 0 5px; border-radius: 5px; color: var(--dim); font-size: 11px; display: grid; place-items: center; }
+.act .ico { width: 10px; height: 10px; }
+.act .ico.play { width: 11px; height: 11px; }
+.hbtn .ico.min { width: 11px; height: 11px; }
+.hbtn .ico.gear { width: 13px; height: 13px; }
 .act button:hover { background: var(--faint); color: var(--fg); }
 .act button.stop:hover { color: var(--fg); }
 .act .q { color: var(--dim); font-size: 11px; white-space: nowrap; }
@@ -160,3 +168,18 @@ ul { list-style: none; }
 #note { padding: 0 14px 12px; color: var(--dim); font-size: 11px; }
 #note button { color: var(--fg); text-decoration: underline; margin-left: 4px; }
 #toast { position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 4px 9px; border-radius: 6px; font-size: 11px; white-space: nowrap; }
+
+/* Stopping / starting: the row stays, its ports and actions give way to a spinner. */
+.row.doing { cursor: default; }
+.row.doing .title, .row.doing .tile, .row.doing .glyph, .row.doing .p { opacity: .55; }
+.doing-txt, .row.doing .lbl { color: var(--dim); font-size: 11px; }
+.spin { width: 10px; height: 10px; flex: none; margin: 0 2px 0 auto; border-radius: 50%;
+  border: 1.6px solid var(--faint); border-top-color: var(--fg); animation: spin .7s linear infinite; }
+.ports .row .spin { margin-right: 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation-duration: 2s; } }
+
+/* Windows: an opaque window that Windows 11 rounds itself; no glass, no inner radius. */
+body.win #card { border-radius: 0; }
+body.win, body.win #card { background: #0b0b0d; }
+body.win.theme-light, body.win.theme-light #card { background: #fff; }

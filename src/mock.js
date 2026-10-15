@@ -35,7 +35,7 @@ if (!window.__TAURI__) {
     started_at: Math.floor(Date.now() / 1000) - ((port * 7919) % 300000),
   });
   const now = Date.now() / 1000;
-  const settings = { theme: Q.get("theme") || "dark", glass: false, lang: "", show_on_start: true, show_all: false, launch_at_login: false, version: "0.2.0", protected: ["dir:~/code/illeta-digital"] };
+  const settings = { theme: Q.get("theme") || "dark", glass: !/Windows/i.test(navigator.userAgent), lang: "", show_on_start: true, show_all: false, launch_at_login: false, version: "0.3.0", protected: ["dir:~/code/illeta-digital"] };
   let closed = [
     { key: "c1", title: "blog", path: "~/code/blog", display: "npm run dev", items: [{ port: 4321, label: "astro", tech: "astro" }], agent_id: "claude", agent_name: "Claude Code", closed_at: now - 600 },
     { key: "c2", title: "crm", path: "~/code/crm", display: "pnpm dev", items: [{ port: 3001, label: "next", tech: "next" }, { port: 5555, label: "prisma", tech: "node" }], agent_id: null, agent_name: null, closed_at: now - 7200 },
@@ -98,7 +98,7 @@ if (!window.__TAURI__) {
             }, 1500);
             return "~/Library/Logs/dev.maparisi.portkeeper/mock.log";
           }
-          case "kill_process": data.ports = data.ports.filter((p) => p.pid !== args.pid); return;
+          case "kill_process": await new Promise((r) => setTimeout(r, 1500)); data.ports = data.ports.filter((p) => p.pid !== args.pid); return; // like the real 1.5 s grace
           case "docker_action": {
             const c = data.docker.containers.find((x) => x.id === args.id);
             if (args.action === "remove") data.docker.containers = data.docker.containers.filter((x) => x !== c);

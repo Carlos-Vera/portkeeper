@@ -37,6 +37,7 @@ const state = {
   responding: new Map(), // port -> bool, from probe_ports
   confirming: null,
   busy: new Set(),
+  stopping: new Map(), // pid or container id -> when Stop was pressed; kept until it is gone
 };
 
 let toastTimer;
@@ -57,6 +58,9 @@ async function call(cmd, args) {
   }
 }
 
+// Windows gets an opaque, natively rounded window (see tauri.windows.conf.json).
+if (/Windows/i.test(navigator.userAgent)) document.body.classList.add("win");
+
 // ---------- data ----------
 let refreshing = false;
 let lastSnapshot = "";
@@ -72,11 +76,12 @@ async function refresh(force = false) {
     // After list_ports, so the tracker has seen this scan.
     const closed = await invoke("list_closed").catch(() => state.closed);
     settleStarting(closed);
+    pruneStopping(ports, docker);
     const toProbe = [];
     for (const p of ports) if (p.dev || settings.show_all) toProbe.push([p.port, p.tech]);
     if (docker.kind === "ok") for (const c of docker.containers) if (c.running) for (const port of c.published_ports) toProbe.push([port, "docker"]);
     const responding = await invoke("probe_ports", { ports: toProbe }).catch(() => ({}));
-    const snap = JSON.stringify([ports, docker, settings, closed, [...state.starting.keys()], responding]);
+    const snap = JSON.stringify([ports, docker, settings, closed, [...state.starting.keys()], [...state.stopping.keys()], responding]);
     if (force || snap !== lastSnapshot) {
       lastSnapshot = snap;
       state.ports = ports;
@@ -157,22 +162,33 @@ function stoppedGroups() {
 // ---------- actions ----------
 const open = (port) => call("open_url", { url: `http://localhost:${port}` });
 
+/** Stop: the rows show "stopping…" from the click until the process or container is really gone. */
 async function stopItems(items) {
   const containers = [...new Map(items.filter((i) => i.container).map((i) => [i.container.id, i.container])).values()];
   const pids = [...new Set(items.filter((i) => i.pid).map((i) => i.pid))];
-  containers.forEach((c) => state.busy.add(c.id));
-  pids.forEach((p) => state.busy.add(p));
+  const ids = [...pids, ...containers.map((c) => c.id)];
+  ids.forEach((id) => state.stopping.set(id, Date.now()));
   render();
   try {
     for (const pid of pids) await call("kill_process", { pid, force: false });
     for (const c of containers) await call("docker_action", { id: c.id, action: "stop" });
-  } catch { /* toast already shown */ }
-  finally {
-    containers.forEach((c) => state.busy.delete(c.id));
-    pids.forEach((p) => state.busy.delete(p));
-    setTimeout(() => refresh(true), 500);
+  } catch {
+    // The error toast is already shown; bring the row back.
+    ids.forEach((id) => state.stopping.delete(id));
+    render();
+  }
+  refresh(true);
+}
+const STOP_TIMEOUT = 20000;
+function pruneStopping(ports, docker) {
+  for (const [id, at] of state.stopping) {
+    const gone = typeof id === "number"
+      ? !ports.some((p) => p.pid === id)
+      : !(docker.kind === "ok" && docker.containers.some((c) => c.id === id && c.running));
+    if (gone || Date.now() - at > STOP_TIMEOUT) state.stopping.delete(id);
   }
 }
+const isStopping = (items) => items.some((i) => state.stopping.has(i.container?.id) || state.stopping.has(i.pid));
 async function dockerAll(containers, action) {
   containers.forEach((c) => state.busy.add(c.id));
   render();
@@ -223,7 +239,6 @@ function ago(secs) {
   return `${Math.floor(d / 86400)}d`;
 }
 
-const isBusy = (items) => items.some((i) => state.busy.has(i.container?.id) || state.busy.has(i.pid));
 
 // ---------- lock ----------
 const lockable = (key) => key.startsWith("dir:") || key.startsWith("d:");
@@ -243,6 +258,18 @@ function btn(label, title, fn, cls = "") {
   b.title = title;
   b.addEventListener("click", (e) => { e.stopPropagation(); fn(); });
   return b;
+}
+/** Button with a drawn icon (text glyphs like ■ ▶ ✕ render hairline-thin on Windows). */
+function ibtn(ico, title, fn, cls = "") {
+  const b = btn("", title, fn, cls);
+  b.appendChild(el("i", `ico ${ico}`));
+  return b;
+}
+/** Spinner + "stopping…" / "starting…" in place of a row's ports and actions. */
+function doing(row, txt, label) {
+  row.classList.add("doing");
+  txt.querySelector(".sub")?.replaceChildren(el("span", "doing-txt", label));
+  row.appendChild(el("span", "spin"));
 }
 function glyph(id) {
   const spec = ICONS[id];
@@ -295,9 +322,8 @@ function groupEl(g) {
   const row = el("div", `row${multi ? " multi" : ""}`);
   row.title = [g.path, g.agent ? t("startedBy", { x: g.agent.name }) : "", locked ? t("lockedTip") : ""].filter(Boolean).join("\n");
 
-  if (isBusy(g.items)) {
-    row.appendChild(el("span", "q", "…"));
-  } else if (state.confirming === g.key) {
+  const stopping = g.items.every((i) => isStopping([i]));
+  if (!stopping && state.confirming === g.key) {
     row.appendChild(confirmBox(t("stopQ", { x: g.title }), [[t("stop"), () => stopItems(g.items)]]));
     wrap.appendChild(row);
     return wrap;
@@ -321,6 +347,11 @@ function groupEl(g) {
   sub.appendChild(plist);
   txt.appendChild(sub);
   row.appendChild(txt);
+  if (stopping) {
+    doing(row, txt, t("stopping"));
+    wrap.appendChild(row);
+    return wrap;
+  }
 
   const acts = el("span", "act hov");
   if (lockable(g.key)) {
@@ -328,7 +359,7 @@ function groupEl(g) {
     lb.appendChild(lockIco(locked ? "unlock" : "lock"));
     acts.appendChild(lb);
   }
-  if (!locked) acts.appendChild(btn("■", multi ? t("stopAll") : t("stop"), () => { state.confirming = g.key; render(); }, "stop"));
+  if (!locked) acts.appendChild(ibtn("stop", multi ? t("stopAll") : t("stop"), () => { state.confirming = g.key; render(); }, "stop"));
   row.appendChild(acts);
   row.appendChild(dot(g.items.map((i) => i.port), g.started));
   const chev = el("span", "chev");
@@ -356,8 +387,12 @@ function portEl(i, locked) {
   const li = el("li");
   const row = el("div", "row");
   row.title = i.container ? `${i.container.name} · ${i.container.image}` : i.cmd || "";
-  if (isBusy([i])) {
-    row.appendChild(el("span", "q", "…"));
+  if (isStopping([i])) {
+    row.classList.add("doing");
+    row.appendChild(glyph(i.tech) || el("i", "glyph"));
+    row.appendChild(el("span", "p", String(i.port)));
+    row.appendChild(el("span", "lbl", t("stopping")));
+    row.appendChild(el("span", "spin"));
   } else if (state.confirming === i.key) {
     row.appendChild(confirmBox(t("stopQ", { x: `${cap(i.label)} · ${i.port}` }), [[t("stop"), () => stopItems([i])]]));
   } else {
@@ -365,7 +400,7 @@ function portEl(i, locked) {
     row.appendChild(portBtn(i.port));
     row.appendChild(el("span", "lbl", cap(i.label)));
     const acts = el("span", "act hov");
-    if (!locked) acts.appendChild(btn("■", i.container ? t("stopContainer", { x: i.container.name }) : t("stopX", { x: i.label }), () => { state.confirming = i.key; render(); }, "stop"));
+    if (!locked) acts.appendChild(ibtn("stop", i.container ? t("stopContainer", { x: i.container.name }) : t("stopX", { x: i.label }), () => { state.confirming = i.key; render(); }, "stop"));
     row.appendChild(acts);
     row.appendChild(dot([i.port], i.started));
     row.appendChild(el("span", "chev"));
@@ -378,9 +413,7 @@ function closedRow({ key, icon, title, ports, when, tip, busy, onStart, onRemove
   const li = el("li", "closed");
   const row = el("div", "row");
   row.title = tip || "";
-  if (busy) {
-    row.appendChild(el("span", "q", t("starting")));
-  } else if (state.confirming === key) {
+  if (!busy && state.confirming === key) {
     row.appendChild(confirmBox(t(removeLabel === "Forget" ? "forgetQ" : "removeQ", { x: title }), [[t(removeLabel.toLowerCase()), onRemove]]));
   } else {
     row.appendChild(tile(icon, title));
@@ -396,9 +429,14 @@ function closedRow({ key, icon, title, ports, when, tip, busy, onStart, onRemove
     if (when) sub.appendChild(el("span", "ago", when));
     txt.appendChild(sub);
     row.appendChild(txt);
+    if (busy) {
+      doing(row, txt, t("starting"));
+      li.appendChild(row);
+      return li;
+    }
     const acts = el("span", "act hov");
-    acts.appendChild(btn("▶", t("startAgain"), onStart));
-    if (!locked) acts.appendChild(btn("✕", t(removeLabel.toLowerCase()), () => { state.confirming = key; render(); }, "stop"));
+    acts.appendChild(ibtn("play", t("startAgain"), onStart));
+    if (!locked) acts.appendChild(ibtn("x", t(removeLabel.toLowerCase()), () => { state.confirming = key; render(); }, "stop"));
     row.appendChild(acts);
     row.appendChild(el("span", "dot"));
     row.appendChild(el("span", "chev"));
@@ -515,7 +553,8 @@ function renderSettings() {
   const s = state.settings;
   const box = $("#settings");
   box.replaceChildren(
-    segRow(t("appearance"), s.theme || "glass", [["glass", t("glass")], ["dark", t("dark")], ["light", t("light")]], setTheme),
+    segRow(t("appearance"), s.glass ? (s.theme || "glass") : (s.theme === "light" ? "light" : "dark"),
+      [...(s.glass ? [["glass", t("glass")]] : []), ["dark", t("dark")], ["light", t("light")]], setTheme),
     selectRow(t("language"), s.lang || "", LANGS.map(([v, n]) => [v, v ? n : t("system")]), setLang),
     toggleRow(t("launchAtLogin"), null, s.launch_at_login, () => setSetting("launch_at_login", !s.launch_at_login)),
     toggleRow(t("openOnStart"), t("openOnStartHint"), s.show_on_start, () => setSetting("show_on_start", !s.show_on_start)),
@@ -568,17 +607,6 @@ function render() {
   for (const t of document.querySelectorAll(".tab")) t.classList.toggle("on", t.dataset.tab === state.tab);
   $("#n-active").textContent = gs.length;
   $("#n-closed").textContent = closed.length || "";
-
-  const note = $("#note");
-  const d = state.docker;
-  note.replaceChildren();
-  note.classList.toggle("hidden", d.kind !== "not_running");
-  if (d.kind === "not_running") {
-    note.append(t("dockerNotRunning"));
-    const b = el("button", "", t("open"));
-    b.addEventListener("click", () => call("open_docker_desktop", {}));
-    note.appendChild(b);
-  }
 
   invoke("set_tray_count", { count: gs.length }).catch(() => {});
   fit();

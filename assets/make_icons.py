@@ -59,9 +59,22 @@ def tray_icon(size=44):
     return img.resize((size, size), Image.LANCZOS)
 
 
+def windows_ico(path):
+    # Windows shows .ico files edge to edge: use the full-bleed tile, not the macOS grid.
+    sizes = [16, 20, 24, 32, 40, 48, 64, 128, 256]
+    favicon(256).save(path, sizes=[(n, n) for n in sizes])
+
+
 if __name__ == "__main__":
+    import sys
+    if sys.argv[1:] == ["ico"]:
+        # Run after `tauri icon`, which would otherwise write the macOS-grid version.
+        windows_ico(ROOT / "src-tauri" / "icons" / "icon.ico")
+        print("wrote src-tauri/icons/icon.ico")
+        sys.exit()
     app_icon().save(ROOT / "assets" / "icon.png")
     favicon(64).save(ROOT / "site" / "favicon.png")
     favicon(256).save(ROOT / "site" / "img" / "icon-256.png")
     tray_icon().save(ROOT / "src-tauri" / "icons" / "tray.png")
-    print("wrote assets/icon.png, site/favicon.png, site/img/icon-256.png, src-tauri/icons/tray.png")
+    favicon(32).save(ROOT / "src-tauri" / "icons" / "tray-color.png")  # Windows / Linux tray
+    print("wrote assets/icon.png, site/favicon.png, site/img/icon-256.png, src-tauri/icons/tray.png, tray-color.png")
