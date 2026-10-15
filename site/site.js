@@ -62,3 +62,14 @@ window.addEventListener("message", (e) => {
     })
     .catch(() => {});
 })();
+
+// Copy an install command.
+for (const b of document.querySelectorAll(".cli .copy")) {
+  b.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(b.previousElementSibling.textContent);
+      b.textContent = "Copied";
+      setTimeout(() => (b.textContent = "Copy"), 1500);
+    } catch { /* clipboard blocked: the text is selectable */ }
+  });
+}

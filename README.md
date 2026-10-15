@@ -16,6 +16,18 @@
   <a href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-Linux-x86_64.AppImage"><img src="docs/download-linux.svg" height="60" alt="Download for Linux" /></a>
 </p>
 
+> **Fastest install: one command.** It downloads the latest release from GitHub, installs it and opens it. No "unidentified developer" dialog (the builds aren't signed with an Apple or Microsoft certificate yet, see [Install](#install)).
+>
+> macOS and Linux, in Terminal:
+> ```bash
+> curl -fsSL https://portkeeper.pages.dev/install.sh | sh
+> ```
+> Windows, in PowerShell:
+> ```powershell
+> irm https://portkeeper.pages.dev/install.ps1 | iex
+> ```
+> [Read the scripts](site/) before you run them, as with any installer.
+
 <p align="center">
   <a href="https://github.com/MarcAparisiTFG/portkeeper/stargazers"><img src="https://img.shields.io/github/stars/MarcAparisiTFG/portkeeper?style=social" alt="GitHub stars" /></a>
   &nbsp;
@@ -79,7 +91,8 @@ The `.msi`, `.deb` and `.rpm` packages are on the [releases page](https://github
 
 The installers are not signed with an Apple or Microsoft developer certificate yet, so your system warns you once:
 
-- **macOS:** open the `.dmg` and drag Portkeeper to Applications. Open it once: macOS says it *could not verify* the app. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. On macOS 14 and older, right-click the app and choose **Open** instead.
+- **The easy way, any system:** one command, see the box at the top of this page. It downloads the latest release from GitHub and installs it with no dialog: files fetched by `curl` or PowerShell and unblocked carry no "downloaded from the internet" mark. On Linux it puts the AppImage in `~/.local/bin/portkeeper` and adds a menu entry. Updates then come from inside the app.
+- **macOS, with the `.dmg`:** drag Portkeeper to Applications. Open it once: macOS says it *could not verify* the app. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. On macOS 14 and older, right-click the app and choose **Open** instead.
   If macOS calls the app *damaged* (it does with version 0.4.0), run this once in Terminal and open it again:
 
   ```bash
