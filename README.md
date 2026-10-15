@@ -60,7 +60,7 @@ Portkeeper puts that in one small panel in your menu bar (macOS) or system tray 
 - **Stop.** `■` stops a port or the whole project after a one-button confirmation. Portkeeper asks the process politely first and kills it if it ignores the request for 1.5 s, so Stop always stops.
 - **Closed, and start again.** Projects that stopped move to *Closed*. Portkeeper remembers the command that started them (`npm start`, `python -m http.server`, a compose project), the folder and the environment, and `▶` starts them again. Secrets in command lines (`--token`, `API_KEY=`) are masked and never written to disk.
 - **Lock.** 🔒 on a project's row hides stop and remove and makes the backend refuse them too. Made for the project a client is testing on your machine.
-- **Settings.** Appearance (Liquid Glass on macOS 26, system blur or acrylic elsewhere, or opaque Dark / Light), language (English, Spanish, French, German, Portuguese), launch at login, open on start, show all processes.
+- **Settings.** Appearance (Glass on macOS: Liquid Glass on macOS 26, the system blur before; opaque Dark or Light everywhere, with native rounded corners on Windows 11), language (English, Spanish, French, German, Portuguese), launch at login, open on start, show all processes.
 
 Portkeeper works entirely on your machine. It reads the process table and talks to the local `docker` command; the only network traffic is a connection to `localhost` to see whether a port answers.
 
@@ -82,7 +82,7 @@ The builds are not code-signed yet, so your system warns you once:
 - **macOS:** open the `.dmg`, drag Portkeeper to Applications, right-click it and choose **Open**. If macOS still refuses, run `xattr -dr com.apple.quarantine /Applications/Portkeeper.app`.
 - **Windows:** when SmartScreen appears, click **More info**, then **Run anyway**.
 
-Docker features need the `docker` command (Docker Desktop, OrbStack, Colima, Rancher Desktop…). Everything else works without it.
+Containers are listed when the `docker` command is available (Docker Desktop, OrbStack, Colima, Rancher Desktop…). Without it Portkeeper simply lists processes and ports, with no prompts.
 
 ## Use
 
