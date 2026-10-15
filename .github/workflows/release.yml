@@ -45,10 +45,14 @@ jobs:
           # Signs the update bundles; the app only installs updates signed with this key.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # macOS: ad-hoc sign the whole bundle. Without it the app ships with only the
+          # linker's signature and Gatekeeper reports it as "damaged" instead of offering
+          # "Open Anyway". Replace with a Developer ID identity once there is one.
+          APPLE_SIGNING_IDENTITY: "-"
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Portkeeper ${{ github.ref_name }}"
-          releaseBody: "Download the installer for your platform below. Builds are not code-signed yet, see the README for the one-time warning on macOS and Windows."
+          releaseBody: "Download the installer for your platform below. The builds have no Apple or Microsoft developer certificate yet, so your system warns once: macOS → System Settings → Privacy & Security → Open Anyway; Windows → More info → Run anyway. Details in the README."
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
