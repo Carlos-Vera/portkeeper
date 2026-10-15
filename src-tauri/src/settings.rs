@@ -17,6 +17,8 @@ pub struct Settings {
     pub theme: String,
     /// UI language code ("en", "es", …); empty = follow the system.
     pub lang: String,
+    /// Look for new versions on GitHub (the only request that leaves the machine).
+    pub check_updates: bool,
 }
 
 impl Default for Settings {
@@ -27,6 +29,7 @@ impl Default for Settings {
             protected: Vec::new(),
             theme: "glass".into(),
             lang: String::new(),
+            check_updates: true,
         }
     }
 }

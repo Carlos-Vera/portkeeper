@@ -37,6 +37,8 @@ const state = {
   responding: new Map(), // port -> bool, from probe_ports
   confirming: null,
   busy: new Set(),
+  update: null, // { version, notes } when GitHub has a newer signed release
+  updating: false,
   stopping: new Map(), // pid or container id -> when Stop was pressed; kept until it is gone
 };
 
@@ -559,6 +561,10 @@ function renderSettings() {
     toggleRow(t("launchAtLogin"), null, s.launch_at_login, () => setSetting("launch_at_login", !s.launch_at_login)),
     toggleRow(t("openOnStart"), t("openOnStartHint"), s.show_on_start, () => setSetting("show_on_start", !s.show_on_start)),
     toggleRow(t("showAll"), t("showAllHint"), s.show_all, () => setSetting("show_all", !s.show_all)),
+    toggleRow(t("checkUpdates"), t("checkUpdatesHint"), s.check_updates, async () => {
+      await setSetting("check_updates", !s.check_updates);
+      checkUpdate();
+    }),
   );
   box.appendChild(el("div", "sec", t("lockedProjects")));
   if (!s.protected.length) {
@@ -639,7 +645,38 @@ function fit() {
   }, 0);
 }
 
+// ---------- updates ----------
+const UPDATE_EVERY = 6 * 3600 * 1000;
+async function checkUpdate() {
+  const info = await invoke("check_update").catch(() => null); // offline or GitHub down: try again later
+  state.update = info || null;
+  renderUpdate();
+}
+async function installUpdate() {
+  state.updating = true;
+  renderUpdate();
+  try {
+    await invoke("install_update"); // restarts Portkeeper when done
+  } catch (e) {
+    state.updating = false;
+    renderUpdate();
+    toast(String(e), 5000);
+  }
+}
+/** A slim bar under the header while a newer version is available. */
+function renderUpdate() {
+  const bar = $("#update");
+  bar.classList.toggle("hidden", !state.update);
+  if (!state.update) return fit();
+  const msg = el("span", "msg", t("updateAvailable", { v: state.update.version }));
+  if (state.update.notes) msg.title = state.update.notes;
+  bar.replaceChildren(msg, state.updating ? el("span", "spin") : btn(t("update"), t("update"), installUpdate, "primary"));
+  fit();
+}
+
 (async function init() {
   await refresh(true);
   setInterval(() => refresh(), 3000);
+  checkUpdate();
+  setInterval(checkUpdate, UPDATE_EVERY);
 })();
