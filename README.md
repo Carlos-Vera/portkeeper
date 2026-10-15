@@ -57,8 +57,8 @@ Portkeeper puts that in one small panel in your menu bar (macOS) or system tray 
   <img src="docs/settings.png" width="300" alt="Settings: appearance, language, launch at login, locked projects" />
 </p>
 
-- **Stop.** `■` stops a port or the whole project after a one-button confirmation. Portkeeper asks the process politely first and kills it if it ignores the request for 1.5 s, so Stop always stops.
-- **Closed, and start again.** Projects that stopped move to *Closed*. Portkeeper remembers the command that started them (`npm start`, `python -m http.server`, a compose project), the folder and the environment, and `▶` starts them again. Secrets in command lines (`--token`, `API_KEY=`) are masked and never written to disk.
+- **Stop.** The stop button on a row stops that port, or the whole project, after a one-button confirmation. While it works, the row shows *stopping…*. Portkeeper asks the process politely first and kills it if it ignores the request for 1.5 s, so Stop always stops.
+- **Closed, and start again.** Projects that stopped move to *Closed*. Portkeeper remembers the command that started them (`npm start`, `python -m http.server`, a compose project), the folder and the environment, and the play button starts them again. Secrets in command lines (`--token`, `API_KEY=`) are masked and never written to disk.
 - **Lock.** 🔒 on a project's row hides stop and remove and makes the backend refuse them too. Made for the project a client is testing on your machine.
 - **Settings.** Appearance (Glass on macOS: Liquid Glass on macOS 26, the system blur before; opaque Dark or Light everywhere, with native rounded corners on Windows 11), language (English, Spanish, French, German, Portuguese), launch at login, open on start, show all processes, check for updates.
 
@@ -77,7 +77,7 @@ Download the file for your system. These links always point to the latest versio
 
 The `.msi`, `.deb` and `.rpm` packages are on the [releases page](https://github.com/MarcAparisiTFG/portkeeper/releases/latest).
 
-The builds are not code-signed yet, so your system warns you once:
+The installers are not signed with an Apple or Microsoft developer certificate yet, so your system warns you once:
 
 - **macOS:** open the `.dmg`, drag Portkeeper to Applications, right-click it and choose **Open**. If macOS still refuses, run `xattr -dr com.apple.quarantine /Applications/Portkeeper.app`.
 - **Windows:** when SmartScreen appears, click **More info**, then **Run anyway**.
@@ -86,13 +86,13 @@ Containers are listed when the `docker` command is available (Docker Desktop, Or
 
 ## Updates
 
-From v0.4.0, Portkeeper keeps itself up to date. It checks GitHub for a new version when it starts and every six hours. When there is one, a bar at the top of the widget says so; **Update** downloads it, checks its signature, installs it and restarts the app. Updates are signed: the app refuses any file not signed with the project's key. Turn the check off in Settings with *Check for updates*.
+From v0.4.0, Portkeeper keeps itself up to date. It checks GitHub for a new version when it starts and every six hours. When there is one, a bar at the top of the widget says so; **Update** downloads it, checks its signature, installs it and restarts the app. Updates are signed with the project's own key (separate from the developer certificates above), and the app refuses any file whose signature doesn't match. Turn the check off in Settings with *Check for updates*.
 
 Versions before 0.4.0 can't update themselves: download the latest version once from the links above.
 
 ## Use
 
-- Click the menu bar / tray icon to open the widget; `–` or `Esc` tucks it away. Right-click the icon to quit.
+- Click the menu bar / tray icon to open the widget; the minimise button or `Esc` tucks it away. Right-click the icon to quit.
 - Click a port number to open `http://localhost:PORT`. Click a project with several ports to expand it.
 - Hover a row for its actions: lock, stop. In *Closed*: start again, forget.
 
