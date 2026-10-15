@@ -93,6 +93,10 @@ npm run build    # installers in src-tauri/target/release/bundle/
 
 Releases are built by GitHub Actions when a `v*` tag is pushed. Bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml` first.
 
+## Contributing
+
+Pull requests are welcome: bug fixes, support for more agents and IDEs, translations, platform fixes. Open an issue first for bigger ideas. Every pull request is reviewed by the maintainer before it is merged; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Maintainer
 
 <img src="https://github.com/MarcAparisiTFG.png?size=80" width="40" align="left" style="border-radius:50%" alt="" />
