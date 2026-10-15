@@ -37,7 +37,7 @@ body.mock.theme-light #card { background: rgba(255, 255, 255, .92); }
 /* Website demo: the page around the iframe draws the glass. */
 body.mock.embed { background: transparent; padding: 0; min-height: 0; }
 body.mock.embed #card { width: 100%; background: transparent; box-shadow: none; }
-body.mock.embed.theme-light #card { background: rgba(255, 255, 255, .88); }
+body.mock.embed.theme-light #card { background: rgba(255, 255, 255, .55); }
 
 header { display: flex; align-items: center; gap: 6px; padding: 9px 8px 5px 14px; }
 .tab { color: var(--dim); font-weight: 500; padding: 2px 0; margin-right: 8px; }
@@ -153,6 +153,7 @@ ul { list-style: none; }
 .hint { color: var(--dim); font-size: 11px; margin-top: 6px; line-height: 1.4; }
 .foot { display: flex; justify-content: space-between; margin-top: 12px; color: var(--dim); font-size: 11px; }
 .foot button:hover { color: var(--fg); }
+.foot .coffee { margin-left: auto; margin-right: 12px; }
 
 #note { padding: 0 14px 12px; color: var(--dim); font-size: 11px; }
 #note button { color: var(--fg); text-decoration: underline; margin-left: 4px; }

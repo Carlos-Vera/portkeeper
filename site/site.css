@@ -23,6 +23,9 @@ main { width: 100%; max-width: 640px; text-align: center; }
 .mark img { width: 36px; height: 36px; border-radius: 9px; }
 .star { display: inline-flex; align-items: center; gap: 7px; margin-top: 16px; padding: 5px 12px; border-radius: 999px;
   font-size: 13px; color: var(--dim); border: 1px solid var(--line); transition: color .15s, border-color .15s; }
+.star + .star { margin-left: 6px; }
+.star.coffee svg { color: #111; }
+.star.coffee:hover { background: #ffdd00; border-color: #ffdd00; color: #111; }
 .star:hover { color: var(--fg); border-color: rgba(0, 0, 0, .25); }
 .star svg { width: 14px; height: 14px; color: #e3b341; }
 .star span { padding-left: 8px; margin-left: 2px; border-left: 1px solid var(--line); color: var(--fg); font-variant-numeric: tabular-nums; }
@@ -50,13 +53,15 @@ h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 600; letter-spacing: -.03em
 .hint { margin: 14px 0 0; font: 12px/1 var(--mono); color: var(--faint); }
 
 .card { margin: 36px auto 0; max-width: 520px; }
-.dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 14px 10px; border-radius: 12px;
+.dl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px; text-align: left;
   border: 1px solid var(--line); background: #fff; transition: border-color .15s, transform .15s, box-shadow .15s; }
 .btn:hover { border-color: rgba(0, 0, 0, .25); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0, 0, 0, .06); }
+.btn svg { width: 26px; height: 26px; flex: none; }
+.btn span { display: flex; flex-direction: column; }
 .btn.here { background: var(--fg); color: #fff; border-color: var(--fg); }
-.btn b { font-weight: 500; font-size: 15px; }
-.btn small { font: 11.5px/1.4 var(--mono); color: var(--faint); }
+.btn b { font-weight: 600; font-size: 15px; line-height: 1.3; }
+.btn small { font-size: 12.5px; color: var(--faint); }
 .btn.here small { color: rgba(255, 255, 255, .6); }
 .meta { margin: 14px 0 0; font: 12px/1.7 var(--mono); color: var(--faint); }
 .meta a { color: var(--dim); border-bottom: 1px solid var(--line); }
@@ -91,5 +96,5 @@ footer a:hover { color: var(--fg); }
 @media (max-width: 560px) {
   body { padding-top: 44px; }
   .demo { --k: 1.1; }
-  .dl, .feats { grid-template-columns: 1fr; }
+  .feats { grid-template-columns: 1fr; }
 }

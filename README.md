@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/demo.png" width="460" alt="Portkeeper: projects, their ports, the agent that started them, and a status dot for each" />
+  <img src="docs/active.png" width="370" alt="Portkeeper: projects, their ports, the agent that started them, and a status dot for each" />
 </p>
 
 <h1 align="center">Portkeeper</h1>
@@ -9,8 +9,22 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-macOS-AppleSilicon.dmg"><img src="docs/download-macos-arm.svg" height="60" alt="Download for macOS, Apple Silicon" /></a>
+  <a href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-macOS-Intel.dmg"><img src="docs/download-macos-intel.svg" height="60" alt="Download for macOS, Intel" /></a>
+  <br />
+  <a href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-Windows-x64-setup.exe"><img src="docs/download-windows.svg" height="60" alt="Download for Windows" /></a>
+  <a href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-Linux-x86_64.AppImage"><img src="docs/download-linux.svg" height="60" alt="Download for Linux" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/MarcAparisiTFG/portkeeper/stargazers"><img src="https://img.shields.io/github/stars/MarcAparisiTFG/portkeeper?style=social" alt="GitHub stars" /></a>
+  &nbsp;
+  <a href="https://buymeacoffee.com/maparisidef"><img src="https://img.shields.io/badge/Buy_me_a_coffee-FFDD00?style=flat&logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" /></a>
+</p>
+
+<p align="center">
   <a href="https://portkeeper.pages.dev">Website</a> ·
-  <a href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest">Download</a> ·
+  <a href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest">All downloads</a> ·
   <a href="#what-it-shows">What it shows</a> ·
   <a href="#install">Install</a> ·
   <a href="#build-from-source">Build</a>
@@ -27,9 +41,9 @@ Portkeeper puts that in one small panel in your menu bar (macOS) or system tray 
 ## What it shows
 
 <p align="center">
-  <img src="docs/active-dark.jpg" width="300" alt="Active tab, dark theme" />
+  <img src="docs/expanded.png" width="300" alt="A project with two ports expanded, each with its own label" />
   &nbsp;&nbsp;
-  <img src="docs/active-light.jpg" width="300" alt="Active tab, light theme" />
+  <img src="docs/light.png" width="300" alt="Light theme" />
 </p>
 
 - **One row per project.** Processes are grouped by their working directory and merged with the Docker Compose project running from the same folder. A project with several ports expands into one row per port, each with its own label (`Vite`, `dashboard/server.mjs`).
@@ -38,9 +52,9 @@ Portkeeper puts that in one small panel in your menu bar (macOS) or system tray 
 - **Sections.** Projects are separated by the agent that started them. Agents first, the rest after.
 
 <p align="center">
-  <img src="docs/closed.jpg" width="300" alt="Closed tab with projects that can be started again" />
+  <img src="docs/closed.png" width="300" alt="Closed tab with projects that can be started again" />
   &nbsp;&nbsp;
-  <img src="docs/settings.jpg" width="300" alt="Settings: appearance, language, launch at login, locked projects" />
+  <img src="docs/settings.png" width="300" alt="Settings: appearance, language, launch at login, locked projects" />
 </p>
 
 - **Stop.** `■` stops a port or the whole project after a one-button confirmation. Portkeeper asks the process politely first and kills it if it ignores the request for 1.5 s, so Stop always stops.
@@ -52,14 +66,16 @@ Portkeeper works entirely on your machine. It reads the process table and talks 
 
 ## Install
 
-Download the file for your system from the [latest release](https://github.com/MarcAparisiTFG/portkeeper/releases/latest):
+Download the file for your system. These links always point to the latest version:
 
-| System | File |
+| System | Download |
 | --- | --- |
-| macOS, Apple Silicon (M1–M4) | `Portkeeper_x.y.z_aarch64.dmg` |
-| macOS, Intel | `Portkeeper_x.y.z_x64.dmg` |
-| Windows 10 / 11 | `Portkeeper_x.y.z_x64-setup.exe` (or the `.msi`) |
-| Linux | `.AppImage`, `.deb` or `.rpm` |
+| macOS, Apple Silicon (M1 and later) | [Portkeeper-macOS-AppleSilicon.dmg](https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-macOS-AppleSilicon.dmg) |
+| macOS, Intel | [Portkeeper-macOS-Intel.dmg](https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-macOS-Intel.dmg) |
+| Windows 10 / 11 | [Portkeeper-Windows-x64-setup.exe](https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-Windows-x64-setup.exe) |
+| Linux | [Portkeeper-Linux-x86_64.AppImage](https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-Linux-x86_64.AppImage) |
+
+The `.msi`, `.deb` and `.rpm` packages are on the [releases page](https://github.com/MarcAparisiTFG/portkeeper/releases/latest).
 
 The builds are not code-signed yet, so your system warns you once:
 
@@ -86,6 +102,7 @@ npm run build    # installers in src-tauri/target/release/bundle/
 
 - `src-tauri/` is the Rust side: `ports.rs` (listening sockets, process tree, launch commands), `docker.rs`, `probe.rs` (does the port answer), `launch.rs` (Closed list and relaunch), `settings.rs`, `lib.rs` (tray, window, Liquid Glass, native animations).
 - `src/` is a plain HTML, CSS and JS front-end with no bundler. Serve it with `python3 -m http.server -d src 4173` to work on the UI without Rust: `src/mock.js` feeds it sample data.
+- `bash assets/screenshots.sh` regenerates the screenshots in `docs/` from the UI with sample data (needs Google Chrome); `node assets/make_badges.js` redraws the download buttons.
 - `cargo test` in `src-tauri/` runs the unit tests; `cargo test -- --ignored` adds the end-to-end ones that start a throwaway `python3` server, stop it and start it again.
 - `portkeeper --dump` prints the raw scan as JSON, useful when reporting a platform-specific bug.
 
@@ -103,12 +120,15 @@ Pull requests are welcome: bug fixes, support for more agents and IDEs, translat
 
 Maintained by **Marc Aparisi Rull**, also behind [Illeta Digital](https://illetadigital.com).<br clear="left" />
 
+If Portkeeper saves you some `lsof` time, you can [buy me a coffee](https://buymeacoffee.com/maparisidef) ☕
+
 [LinkedIn](https://www.linkedin.com/in/marc-aparisi-rull-160bb71bb/) ·
 [Instagram](https://www.instagram.com/maparisi_dev/) ·
 [YouTube](https://www.youtube.com/@maparisi_dev) ·
 [TikTok](https://www.tiktok.com/@maparisi_dev) ·
 [Facebook](https://www.facebook.com/profile.php?id=61594776640153) ·
-[GitHub](https://github.com/MarcAparisiTFG?tab=repositories)
+[GitHub](https://github.com/MarcAparisiTFG?tab=repositories) ·
+[Buy me a coffee](https://buymeacoffee.com/maparisidef)
 
 ## License
 

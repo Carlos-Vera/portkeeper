@@ -539,6 +539,7 @@ function renderSettings() {
   }
   const foot = el("div", "foot");
   foot.appendChild(el("span", "", `Portkeeper ${s.version || ""}`.trim()));
+  foot.appendChild(btn(`☕ ${t("coffee")}`, "buymeacoffee.com/maparisidef", () => call("open_url", { url: "https://buymeacoffee.com/maparisidef" }), "coffee"));
   foot.appendChild(btn(t("quit"), t("quit"), () => invoke("quit")));
   box.appendChild(foot);
 }
