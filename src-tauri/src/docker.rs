@@ -235,36 +235,6 @@ pub fn open_logs(name: &str) -> Result<(), String> {
     let command = format!("\"{}\" logs -f --tail 200 {name}", bin.display());
     system::open_in_terminal(&command)
 }
-
-pub fn open_desktop() -> Result<(), String> {
-    #[cfg(target_os = "macos")]
-    {
-        Command::new("open")
-            .args(["-a", "Docker"])
-            .status()
-            .map_err(|e| e.to_string())
-            .and_then(|s| {
-                if s.success() {
-                    Ok(())
-                } else {
-                    Err("Docker.app not found".into())
-                }
-            })
-    }
-    #[cfg(target_os = "windows")]
-    {
-        let exe = r"C:\Program Files\Docker\Docker\Docker Desktop.exe";
-        let mut cmd = Command::new("cmd");
-        cmd.args(["/C", "start", "", exe]);
-        system::hide_console(&mut cmd);
-        cmd.spawn().map(|_| ()).map_err(|e| e.to_string())
-    }
-    #[cfg(target_os = "linux")]
-    {
-        Err("Start the Docker daemon, e.g. `sudo systemctl start docker`".into())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::published_ports;

@@ -115,11 +115,6 @@ async fn docker_logs(name: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn open_docker_desktop() -> Result<(), String> {
-    docker::open_desktop()
-}
-
-#[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
     if !(url.starts_with("http://") || url.starts_with("https://")) {
         return Err("only http(s) URLs can be opened".into());
@@ -307,15 +302,41 @@ fn apply_glass(win: &WebviewWindow) {
             Some(16.0),
         );
     }
+    // Windows: no glass. The window is opaque (tauri.windows.conf.json) and
+    // Windows 11 rounds it natively; see `windows_frame`.
     #[cfg(target_os = "windows")]
-    {
-        if window_vibrancy::apply_acrylic(win, Some((0, 0, 0, 0))).is_ok() {
-            GLASS.store(true, Ordering::Relaxed);
-        }
-    }
+    windows_frame(win);
     #[cfg(target_os = "linux")]
     {
         let _ = win;
+    }
+}
+
+/// Windows 11: round the borderless window natively and drop the 1px white
+/// border Windows draws around undecorated windows that have a shadow.
+/// Both calls are ignored on Windows 10.
+#[cfg(target_os = "windows")]
+fn windows_frame(win: &WebviewWindow) {
+    use windows_sys::Win32::Graphics::Dwm::{
+        DwmSetWindowAttribute, DWMWA_BORDER_COLOR, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_ROUND,
+    };
+    const DWMWA_COLOR_NONE: u32 = 0xFFFF_FFFE;
+    let Ok(hwnd) = win.hwnd() else { return };
+    let corner = DWMWCP_ROUND;
+    // SAFETY: valid HWND owned by this process; pointers to live locals of the stated size.
+    unsafe {
+        DwmSetWindowAttribute(
+            hwnd.0 as _,
+            DWMWA_WINDOW_CORNER_PREFERENCE as u32,
+            &corner as *const _ as *const _,
+            std::mem::size_of_val(&corner) as u32,
+        );
+        DwmSetWindowAttribute(
+            hwnd.0 as _,
+            DWMWA_BORDER_COLOR as u32,
+            &DWMWA_COLOR_NONE as *const _ as *const _,
+            std::mem::size_of::<u32>() as u32,
+        );
     }
 }
 
@@ -644,7 +665,6 @@ pub fn run() {
             list_containers,
             docker_action,
             docker_logs,
-            open_docker_desktop,
             open_url,
             get_settings,
             fit_window,
@@ -711,8 +731,12 @@ pub fn run() {
                     "../icons/tray.png"
                 ))?)
                 .icon_as_template(true);
+            // Windows / Linux: a full-size coloured tile; the app icon has macOS
+            // margins and shrinks to a few pixels in the tray.
             #[cfg(not(target_os = "macos"))]
-            let tray = tray.icon(app.default_window_icon().cloned().expect("bundled icon"));
+            let tray = tray.icon(tauri::image::Image::from_bytes(include_bytes!(
+                "../icons/tray-color.png"
+            ))?);
             let tray = tray.build(app)?;
 
             if let Some(win) = app.get_webview_window("main") {
