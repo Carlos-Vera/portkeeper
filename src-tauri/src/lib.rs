@@ -30,6 +30,7 @@ struct SettingsDto {
     show_all: bool,
     protected: Vec<String>,
     launch_at_login: bool,
+    check_updates: bool,
     version: String,
 }
 
@@ -38,6 +39,56 @@ type SettingsState = Mutex<settings::Store>;
 const LOCKED: &str = "This project is locked in Portkeeper. Unlock it to stop it.";
 
 // ---------- commands (called from the web view) ----------
+
+/// A newer version published on GitHub (see `plugins.updater` in tauri.conf.json).
+#[derive(serde::Serialize)]
+struct UpdateInfo {
+    version: String,
+    notes: Option<String>,
+}
+
+/// Ask GitHub for a newer signed release. `None` when up to date or turned off.
+#[tauri::command]
+async fn check_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let enabled = app
+        .state::<SettingsState>()
+        .lock()
+        .unwrap()
+        .value
+        .check_updates;
+    if !enabled {
+        return Ok(None);
+    }
+    let update = app
+        .updater()
+        .map_err(|e| e.to_string())?
+        .check()
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(update.map(|u| UpdateInfo {
+        version: u.version,
+        notes: u.body,
+    }))
+}
+
+/// Download, verify the signature, install and restart.
+#[tauri::command]
+async fn install_update(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let update = app
+        .updater()
+        .map_err(|e| e.to_string())?
+        .check()
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("Portkeeper is up to date")?;
+    update
+        .download_and_install(|_, _| {}, || {})
+        .await
+        .map_err(|e| e.to_string())?;
+    app.restart()
+}
 
 #[tauri::command]
 async fn list_ports(app: AppHandle) -> Result<Vec<ports::PortInfo>, String> {
@@ -139,6 +190,7 @@ fn get_settings(app: AppHandle) -> SettingsDto {
         show_all: s.show_all,
         protected: s.protected,
         launch_at_login: app.autolaunch().is_enabled().unwrap_or(false),
+        check_updates: s.check_updates,
         version: app.package_info().version.to_string(),
     }
 }
@@ -155,6 +207,7 @@ fn set_setting(app: AppHandle, name: String, value: bool) -> Result<(), String> 
     match name.as_str() {
         "show_on_start" => store.value.show_on_start = value,
         "show_all" => store.value.show_all = value,
+        "check_updates" => store.value.check_updates = value,
         _ => return Err(format!("unknown setting {name}")),
     }
     store.save();
@@ -654,6 +707,7 @@ pub fn run() {
     let builder = builder.plugin(tauri_nspanel::init());
     builder
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
@@ -677,6 +731,8 @@ pub fn run() {
             set_theme,
             set_lang,
             probe_ports,
+            check_update,
+            install_update,
             toggle_protected,
             quit,
         ])
