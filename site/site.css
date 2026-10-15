@@ -1,0 +1,95 @@
+/* Portkeeper: one glass page, like the app. */
+:root {
+  --fg: #fff;
+  --dim: rgba(255, 255, 255, .62);
+  --faint: rgba(255, 255, 255, .38);
+  --line: rgba(255, 255, 255, .14);
+  --glass: rgba(255, 255, 255, .08);
+  --on: #30d158;
+  --sans: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  color: var(--fg); font: 16px/1.55 var(--sans); -webkit-font-smoothing: antialiased;
+  background: #0f1626;
+  background-image:
+    radial-gradient(60% 50% at 20% 10%, rgba(94, 120, 210, .45), transparent 70%),
+    radial-gradient(50% 45% at 85% 25%, rgba(140, 90, 190, .35), transparent 70%),
+    radial-gradient(60% 50% at 60% 95%, rgba(40, 110, 140, .4), transparent 70%);
+  background-attachment: fixed;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 72px 16px 48px;
+}
+a { color: inherit; text-decoration: none; }
+main { width: 100%; max-width: 560px; text-align: center; }
+
+.mark { display: inline-flex; align-items: center; gap: 12px; font-weight: 600; font-size: 22px; letter-spacing: -.01em; }
+.mark img { width: 34px; height: 34px; border-radius: 9px; }
+h1 { font-size: clamp(24px, 4.5vw, 32px); font-weight: 500; letter-spacing: -.02em; line-height: 1.2; margin: 24px 0 0; }
+.sub { color: var(--dim); margin: 12px auto 0; max-width: 42ch; }
+.sub b { color: var(--fg); font-weight: 500; }
+
+/* The app itself, on glass: 290px like the real window, shown 1.3x. */
+.demo { --k: 1.3; margin: 40px auto 0; }
+.glass {
+  position: relative; width: calc(290px * var(--k)); height: calc(var(--h, 330px) * var(--k)); margin: 0 auto;
+  border-radius: calc(14px * var(--k)); overflow: hidden;
+  background: rgba(22, 26, 40, .42);
+  backdrop-filter: blur(30px) saturate(160%); -webkit-backdrop-filter: blur(30px) saturate(160%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16), inset 0 1px 0 rgba(255, 255, 255, .22), 0 30px 70px rgba(0, 0, 0, .45);
+  transition: height .25s ease;
+}
+.glass iframe { position: absolute; top: 0; left: 0; width: 290px; height: var(--h, 330px); border: 0; background: transparent;
+  transform: scale(var(--k)); transform-origin: 0 0; }
+.hint { margin: 14px 0 0; font: 12px/1 var(--mono); color: var(--faint); }
+.star { display: inline-flex; align-items: center; gap: 7px; margin-top: 16px; padding: 6px 12px; border-radius: 999px;
+  font-size: 13px; color: var(--dim); background: rgba(255, 255, 255, .06); border: 1px solid var(--line); transition: color .15s, background .15s; }
+.star:hover { color: var(--fg); background: rgba(255, 255, 255, .12); }
+.star svg { width: 14px; height: 14px; color: #e3b341; }
+.star span { padding-left: 8px; margin-left: 2px; border-left: 1px solid var(--line); color: var(--fg); font-variant-numeric: tabular-nums; }
+.by { margin: 52px auto 0; display: inline-flex; align-items: center; gap: 14px; text-align: left; padding: 12px 18px 12px 12px;
+  border-radius: 999px; background: var(--glass); border: 1px solid var(--line); }
+.by img { width: 48px; height: 48px; border-radius: 50%; display: block; }
+.by small { display: block; font: 11px/1.3 var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: .08em; }
+.by b { display: block; font-weight: 500; font-size: 15px; line-height: 1.4; }
+.by span { font-size: 13px; color: var(--dim); }
+.by a { color: var(--dim); border-bottom: 1px solid var(--line); }
+.by a:hover { color: var(--fg); border-color: var(--fg); }
+
+.card {
+  margin: 28px auto 0; padding: 18px; border-radius: 18px;
+  background: var(--glass); border: 1px solid var(--line);
+  backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 20px 50px rgba(0, 0, 0, .25);
+}
+.dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 10px; border-radius: 12px;
+  background: rgba(255, 255, 255, .06); border: 1px solid var(--line); transition: background .15s, transform .15s;
+}
+.btn:hover { background: rgba(255, 255, 255, .14); transform: translateY(-1px); }
+.btn.here { background: var(--fg); color: #0f1626; border-color: transparent; }
+.btn.here:hover { background: #fff; }
+.btn b { font-weight: 500; font-size: 15px; }
+.btn small { font-size: 11.5px; color: var(--faint); font-family: var(--mono); }
+.btn.here small { color: rgba(15, 22, 38, .6); }
+.meta { margin: 14px 0 0; font: 12px/1.6 var(--mono); color: var(--faint); }
+.meta a { color: var(--dim); border-bottom: 1px solid var(--line); }
+.meta a:hover { color: var(--fg); }
+
+.how { margin: 44px auto 0; max-width: 460px; text-align: left; display: grid; gap: 10px; }
+.how div { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: var(--dim); font-size: 14.5px; }
+.how i { font-style: normal; color: var(--on); font-family: var(--mono); font-size: 12px; padding-top: 3px; }
+.how b { color: var(--fg); font-weight: 500; }
+
+footer { margin-top: 28px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; font: 12px/1.6 var(--mono); color: var(--faint); }
+footer a:hover { color: var(--fg); }
+footer span { color: var(--faint); }
+
+@media (max-width: 480px) {
+  body { padding-top: 48px; }
+  .demo { --k: 1.1; }
+  .dl { grid-template-columns: 1fr; }
+}

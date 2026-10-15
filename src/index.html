@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portkeeper</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="card">
+    <header data-tauri-drag-region>
+      <button class="tab" data-tab="active"><b data-t="active">Active</b><span id="n-active"></span></button>
+      <button class="tab" data-tab="closed"><b data-t="closed">Closed</b><span id="n-closed"></span></button>
+      <span id="settings-title" class="hidden" data-tauri-drag-region data-t="settings">Settings</span>
+      <span class="grow" data-tauri-drag-region></span>
+      <button id="gear" class="hbtn" title="Settings"><i class="ico gear"></i></button>
+      <button id="min" class="hbtn" title="Minimize to the menu bar">–</button>
+    </header>
+    <ul id="list"></ul>
+    <div id="settings" class="hidden"></div>
+    <p id="note" class="hidden"></p>
+  </div>
+  <div id="toast" class="hidden"></div>
+  <script src="i18n.js"></script>
+  <script src="mock.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

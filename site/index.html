@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portkeeper</title>
+  <meta name="description" content="A tiny menu bar / tray widget for macOS and Windows: the ports you have open, who started them, and a button to stop them." />
+  <meta property="og:title" content="Portkeeper" />
+  <meta property="og:description" content="See the ports you have open and who started them." />
+    <meta name="theme-color" content="#0f1626" />
+  <link rel="icon" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="site.css" />
+</head>
+<body>
+<main>
+  <a class="mark" href="https://github.com/MarcAparisiTFG/portkeeper"><img src="img/icon-256.png" alt="" />Portkeeper</a>
+  <div><a class="star" href="https://github.com/MarcAparisiTFG/portkeeper" aria-label="Star Portkeeper on GitHub">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg>
+    Star on GitHub<span id="stars" hidden></span></a></div>
+  <h1>See the ports you have open,<br />and who started them.</h1>
+  <p class="sub">A tiny widget in your menu bar or tray. Every <b>port</b> and <b>Docker container</b>, grouped by project, with the logo of the <b>agent or IDE</b> that started it. Stop it with one click. Free for personal use.</p>
+
+  <div class="demo">
+    <div class="glass" id="glass"><iframe id="app" src="app/index.html?embed" title="Portkeeper live demo with sample projects" scrolling="no"></iframe></div>
+    <p class="hint">Live demo with sample data. Try it.</p>
+  </div>
+
+  <div class="card">
+    <div class="dl">
+      <a class="btn" id="mac" href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest"><b>macOS</b><small>M1+ · Intel</small></a>
+      <a class="btn" id="win" data-asset="x64-setup.exe" href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest"><b>Windows</b><small>10 · 11</small></a>
+      <a class="btn" id="linux" data-asset="amd64.AppImage" href="https://github.com/MarcAparisiTFG/portkeeper/releases/latest"><b>Linux</b><small>AppImage</small></a>
+    </div>
+    <p class="meta"><span id="ver">v0.2.0</span> · <a href="https://github.com/MarcAparisiTFG/portkeeper/blob/main/LICENSE">Noncommercial license</a> · <a href="https://github.com/MarcAparisiTFG/portkeeper">Source</a><br />Not signed yet. macOS: right-click → Open. Windows: More info → Run anyway.</p>
+  </div>
+
+  <div class="how">
+    <div><i>01</i><span><b>Scan.</b> Listening ports and <code>docker ps</code>, grouped by the folder they run from.</span></div>
+    <div><i>02</i><span><b>Who.</b> Walks up the process tree to the agent or IDE: Claude Code, Codex, Cursor, Gemini, Copilot, VS Code…</span></div>
+    <div><i>03</i><span><b>Act.</b> Open, stop, start again, or lock a project so nobody stops it by mistake. Everything stays on your machine.</span></div>
+  </div>
+
+  <div class="by">
+    <img src="https://github.com/MarcAparisiTFG.png?size=96" width="48" height="48" alt="Marc Aparisi Rull" />
+    <div>
+      <small>Maintained by</small>
+      <b>Marc Aparisi Rull</b>
+      <span><a href="https://www.linkedin.com/in/marc-aparisi-rull-160bb71bb/">LinkedIn</a> · <a href="https://github.com/MarcAparisiTFG">GitHub</a> · <a href="https://illetadigital.com">Illeta Digital</a></span>
+    </div>
+  </div>
+
+  <footer>
+    <a href="https://www.instagram.com/maparisi_dev/">Instagram</a><span>·</span>
+    <a href="https://www.youtube.com/@maparisi_dev">YouTube</a><span>·</span>
+    <a href="https://www.tiktok.com/@maparisi_dev">TikTok</a><span>·</span>
+    <a href="https://www.facebook.com/profile.php?id=61594776640153">Facebook</a>
+  </footer>
+</main>
+<script src="site.js"></script>
+</body>
+</html>
