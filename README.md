@@ -108,6 +108,6 @@ Maintained by **Marc Aparisi Rull**, also behind [Illeta Digital](https://illeta
 
 ## License
 
-Free for personal and other noncommercial use under the [PolyForm Noncommercial License 1.0.0](LICENSE). **Commercial use needs written permission**: ask on [LinkedIn](https://www.linkedin.com/in/marc-aparisi-rull-160bb71bb/) or open an issue.
+Free for personal and other noncommercial use under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). **Commercial use needs written permission**: ask on [LinkedIn](https://www.linkedin.com/in/marc-aparisi-rull-160bb71bb/) or open an issue.
 
 Logos come from [Simple Icons](https://simpleicons.org) (CC0) and belong to their respective owners.
