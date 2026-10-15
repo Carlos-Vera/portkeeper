@@ -60,9 +60,9 @@ Portkeeper puts that in one small panel in your menu bar (macOS) or system tray 
 - **Stop.** `■` stops a port or the whole project after a one-button confirmation. Portkeeper asks the process politely first and kills it if it ignores the request for 1.5 s, so Stop always stops.
 - **Closed, and start again.** Projects that stopped move to *Closed*. Portkeeper remembers the command that started them (`npm start`, `python -m http.server`, a compose project), the folder and the environment, and `▶` starts them again. Secrets in command lines (`--token`, `API_KEY=`) are masked and never written to disk.
 - **Lock.** 🔒 on a project's row hides stop and remove and makes the backend refuse them too. Made for the project a client is testing on your machine.
-- **Settings.** Appearance (Glass on macOS: Liquid Glass on macOS 26, the system blur before; opaque Dark or Light everywhere, with native rounded corners on Windows 11), language (English, Spanish, French, German, Portuguese), launch at login, open on start, show all processes.
+- **Settings.** Appearance (Glass on macOS: Liquid Glass on macOS 26, the system blur before; opaque Dark or Light everywhere, with native rounded corners on Windows 11), language (English, Spanish, French, German, Portuguese), launch at login, open on start, show all processes, check for updates.
 
-Portkeeper works entirely on your machine. It reads the process table and talks to the local `docker` command; the only network traffic is a connection to `localhost` to see whether a port answers.
+Portkeeper works entirely on your machine. It reads the process table and talks to the local `docker` command. It connects to `localhost` to see whether a port answers, and to GitHub every few hours to look for a new version (turn this off in Settings). No account, no telemetry.
 
 ## Install
 
@@ -83,6 +83,12 @@ The builds are not code-signed yet, so your system warns you once:
 - **Windows:** when SmartScreen appears, click **More info**, then **Run anyway**.
 
 Containers are listed when the `docker` command is available (Docker Desktop, OrbStack, Colima, Rancher Desktop…). Without it Portkeeper simply lists processes and ports, with no prompts.
+
+## Updates
+
+From v0.4.0, Portkeeper keeps itself up to date. It checks GitHub for a new version when it starts and every six hours. When there is one, a bar at the top of the widget says so; **Update** downloads it, checks its signature, installs it and restarts the app. Updates are signed: the app refuses any file not signed with the project's key. Turn the check off in Settings with *Check for updates*.
+
+Versions before 0.4.0 can't update themselves: download the latest version once from the links above.
 
 ## Use
 
@@ -108,7 +114,7 @@ npm run build    # installers in src-tauri/target/release/bundle/
 
 `site/` is the one-page website. `npm run site` copies the app UI into it as a live demo; `npm run deploy:site` publishes it to Cloudflare Pages (run `npx wrangler login` once first).
 
-Releases are built by GitHub Actions when a `v*` tag is pushed. Bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml` first.
+Releases are built by GitHub Actions when a `v*` tag is pushed. Bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml` first. The workflow signs the update bundles with the `TAURI_SIGNING_PRIVATE_KEY` secret and publishes `latest.json`, which installed copies read to find the update.
 
 ## Contributing
 
