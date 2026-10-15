@@ -183,3 +183,12 @@ ul { list-style: none; }
 body.win #card { border-radius: 0; }
 body.win, body.win #card { background: #0b0b0d; }
 body.win.theme-light, body.win.theme-light #card { background: #fff; }
+
+/* New version available */
+#update { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 8px 6px; padding: 5px 5px 5px 10px;
+  border-radius: 8px; background: var(--hover); box-shadow: inset 0 0 0 .5px var(--edge); }
+#update .msg { color: var(--fg); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#update .msg::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--on); margin: 0 7px 1px 0; }
+#update .primary { height: 22px; padding: 0 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--fg); color: var(--bg); }
+#update .primary:hover { opacity: .85; }
+#update .spin { margin: 0 6px 0 0; }

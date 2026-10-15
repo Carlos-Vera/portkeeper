@@ -35,7 +35,7 @@ if (!window.__TAURI__) {
     started_at: Math.floor(Date.now() / 1000) - ((port * 7919) % 300000),
   });
   const now = Date.now() / 1000;
-  const settings = { theme: Q.get("theme") || "dark", glass: !/Windows/i.test(navigator.userAgent), lang: "", show_on_start: true, show_all: false, launch_at_login: false, version: "0.3.0", protected: ["dir:~/code/illeta-digital"] };
+  const settings = { theme: Q.get("theme") || "dark", glass: !/Windows/i.test(navigator.userAgent), lang: "", show_on_start: true, show_all: false, launch_at_login: false, check_updates: true, version: "0.4.0", protected: ["dir:~/code/illeta-digital"] };
   let closed = [
     { key: "c1", title: "blog", path: "~/code/blog", display: "npm run dev", items: [{ port: 4321, label: "astro", tech: "astro" }], agent_id: "claude", agent_name: "Claude Code", closed_at: now - 600 },
     { key: "c2", title: "crm", path: "~/code/crm", display: "pnpm dev", items: [{ port: 3001, label: "next", tech: "next" }, { port: 5555, label: "prisma", tech: "node" }], agent_id: null, agent_name: null, closed_at: now - 7200 },
@@ -88,6 +88,8 @@ if (!window.__TAURI__) {
           }
           case "list_closed": return closed;
           case "fit_window": if (EMBED) parent.postMessage({ portkeeper: "height", value: args.height, theme: settings.theme }, "*"); return;
+          case "check_update": return Q.has("update") ? { version: "0.4.1", notes: "Faster scans" } : null;
+          case "install_update": await new Promise((r) => setTimeout(r, 2500)); throw "Demo: nothing to install";
           case "probe_ports": return Object.fromEntries(args.ports.map(([p]) => [p, p !== 8001])); // 8001 "still booting"
           case "forget_closed": closed = closed.filter((c) => c.key !== args.key); return;
           case "relaunch": {
