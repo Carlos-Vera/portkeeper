@@ -79,7 +79,13 @@ The `.msi`, `.deb` and `.rpm` packages are on the [releases page](https://github
 
 The installers are not signed with an Apple or Microsoft developer certificate yet, so your system warns you once:
 
-- **macOS:** open the `.dmg`, drag Portkeeper to Applications, right-click it and choose **Open**. If macOS still refuses, run `xattr -dr com.apple.quarantine /Applications/Portkeeper.app`.
+- **macOS:** open the `.dmg` and drag Portkeeper to Applications. Open it once: macOS says it *could not verify* the app. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. On macOS 14 and older, right-click the app and choose **Open** instead.
+  If macOS calls the app *damaged* (it does with version 0.4.0), run this once in Terminal and open it again:
+
+  ```bash
+  xattr -dr com.apple.quarantine /Applications/Portkeeper.app
+  ```
+
 - **Windows:** when SmartScreen appears, click **More info**, then **Run anyway**.
 
 Containers are listed when the `docker` command is available (Docker Desktop, OrbStack, Colima, Rancher Desktop…). Without it Portkeeper simply lists processes and ports, with no prompts.
