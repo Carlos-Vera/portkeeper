@@ -8,6 +8,15 @@ if (!window.__TAURI__) {
   document.addEventListener("DOMContentLoaded", () => document.body.classList.add("mock", ...(EMBED ? ["embed"] : [])));
   // `?shot=active|expanded|closed|settings` (+ `&theme=light`): fixed states for the
   // README screenshots, see assets/screenshots.sh.
+  // The website's light/dark toggle drives the demo's theme.
+  if (EMBED) {
+    addEventListener("message", (e) => {
+      if (e.data && e.data.portkeeper === "theme" && ["dark", "light"].includes(e.data.value) && settings.theme !== e.data.value) {
+        settings.theme = e.data.value;
+        if (typeof refresh === "function") refresh(true);
+      }
+    });
+  }
   const SHOT = Q.get("shot");
   if (SHOT) {
     try { localStorage.setItem("tab", SHOT === "closed" ? "closed" : "active"); } catch { /* ignore */ }
@@ -78,7 +87,7 @@ if (!window.__TAURI__) {
             return settings.protected;
           }
           case "list_closed": return closed;
-          case "fit_window": if (EMBED) parent.postMessage({ portkeeper: "height", value: args.height }, "*"); return;
+          case "fit_window": if (EMBED) parent.postMessage({ portkeeper: "height", value: args.height, theme: settings.theme }, "*"); return;
           case "probe_ports": return Object.fromEntries(args.ports.map(([p]) => [p, p !== 8001])); // 8001 "still booting"
           case "forget_closed": closed = closed.filter((c) => c.key !== args.key); return;
           case "relaunch": {

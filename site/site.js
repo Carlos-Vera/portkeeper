@@ -1,8 +1,39 @@
+// Light / dark: the system decides unless the toggle saved a choice. The demo app follows.
+(function () {
+  const root = document.documentElement;
+  const media = matchMedia("(prefers-color-scheme: dark)");
+  const app = document.getElementById("app");
+  const mode = () => root.dataset.theme || (media.matches ? "dark" : "light");
+  function sync() {
+    const m = mode();
+    root.dataset.mode = m;
+    if (app.contentWindow && app.src) app.contentWindow.postMessage({ portkeeper: "theme", value: m }, "*");
+  }
+  // Load the demo already in the right theme (no flash).
+  app.src = app.dataset.src + "&theme=" + mode();
+  app.addEventListener("load", sync);
+  media.addEventListener("change", sync);
+  document.getElementById("theme").addEventListener("click", () => {
+    const next = mode() === "dark" ? "light" : "dark";
+    // Back to following the system when the choice matches it.
+    if (next === (media.matches ? "dark" : "light")) delete root.dataset.theme;
+    else root.dataset.theme = next;
+    try {
+      if (root.dataset.theme) localStorage.setItem("theme", root.dataset.theme);
+      else localStorage.removeItem("theme");
+    } catch (e) { /* private mode */ }
+    sync();
+  });
+  sync();
+})();
+
 // The embedded app reports its height; size the glass to it.
 window.addEventListener("message", (e) => {
   const d = e.data;
   if (d && d.portkeeper === "height" && Number.isFinite(d.value)) {
-    document.getElementById("glass").style.setProperty("--h", Math.min(Math.max(d.value, 60), 600) + "px");
+    const g = document.getElementById("glass");
+    g.style.setProperty("--h", Math.min(Math.max(d.value, 60), 600) + "px");
+    if (d.theme) g.dataset.theme = d.theme; // light: white panel, like the app
   }
 });
 

@@ -6,15 +6,17 @@
   --dim: rgba(255, 255, 255, .5);
   --faint: rgba(255, 255, 255, .1);
   --hover: rgba(255, 255, 255, .07);
+  --track: rgba(255, 255, 255, .2);
+  --edge: rgba(255, 255, 255, .25);
   --on: #30d158;
   --warn: #ffd60a;
   --lock: #ffb800;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 /* Light tokens: the Light theme, and Glass when the system is in light mode. */
-body.theme-light { --bg: #fff; --fg: #000; --dim: rgba(0, 0, 0, .5); --faint: rgba(0, 0, 0, .1); --hover: rgba(0, 0, 0, .06); --on: #28a745; --lock: #c47f00; }
+body.theme-light { --track: rgba(0, 0, 0, .14); --edge: rgba(0, 0, 0, .18); --bg: #fff; --fg: #000; --dim: rgba(0, 0, 0, .5); --faint: rgba(0, 0, 0, .1); --hover: rgba(0, 0, 0, .06); --on: #28a745; --lock: #c47f00; }
 @media (prefers-color-scheme: light) {
-  body.glass { --bg: #fff; --fg: #000; --dim: rgba(0, 0, 0, .5); --faint: rgba(0, 0, 0, .1); --hover: rgba(0, 0, 0, .06); --on: #28a745; --lock: #c47f00; }
+  body.glass { --track: rgba(0, 0, 0, .14); --edge: rgba(0, 0, 0, .18); --bg: #fff; --fg: #000; --dim: rgba(0, 0, 0, .5); --faint: rgba(0, 0, 0, .1); --hover: rgba(0, 0, 0, .06); --on: #28a745; --lock: #c47f00; }
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { background: transparent; overflow: hidden; }
@@ -37,7 +39,7 @@ body.mock.theme-light #card { background: rgba(255, 255, 255, .92); }
 /* Website demo: the page around the iframe draws the glass. */
 body.mock.embed { background: transparent; padding: 0; min-height: 0; }
 body.mock.embed #card { width: 100%; background: transparent; box-shadow: none; }
-body.mock.embed.theme-light #card { background: rgba(255, 255, 255, .55); }
+body.mock.embed.theme-light #card { background: #fff; } /* like the app: Light is an opaque white panel */
 
 header { display: flex; align-items: center; gap: 6px; padding: 9px 8px 5px 14px; }
 .tab { color: var(--dim); font-weight: 500; padding: 2px 0; margin-right: 8px; }
@@ -112,12 +114,12 @@ ul { list-style: none; }
 .ports .lbl { flex: 1; min-width: 0; color: var(--dim); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* boxed confirmation, takes the place of the row */
-.cbox { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 4px 4px 4px 10px; border-radius: 8px; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .25); }
+.cbox { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 4px 4px 4px 10px; border-radius: 8px; box-shadow: inset 0 0 0 .5px var(--edge); }
 .cbox .q { color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cacts { display: flex; gap: 4px; flex: none; }
 .cacts button { height: 24px; padding: 0 12px; border-radius: 6px; font-size: 11px; font-weight: 600; }
 .cacts .primary { background: var(--fg); color: var(--bg); }
-.cacts .primary:hover { background: rgba(255, 255, 255, .85); }
+.cacts .primary:hover { opacity: .85; }
 .row:has(.cbox) { padding: 2px; }
 .row:has(.cbox):hover { background: none; }
 
@@ -139,7 +141,7 @@ ul { list-style: none; }
 .set { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; }
 .set + .set { border-top: .5px solid var(--faint); }
 .set small { display: block; color: var(--dim); font-size: 10.5px; margin-top: 2px; }
-.sw { position: relative; width: 26px; height: 15px; flex: none; border-radius: 8px; background: rgba(255, 255, 255, .2); transition: background .15s; }
+.sw { position: relative; width: 26px; height: 15px; flex: none; border-radius: 8px; background: var(--track); transition: background .15s; }
 .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%; background: var(--fg); transition: transform .15s; }
 .sw.on { background: var(--fg); }
 .sw.on::after { background: var(--bg); transform: translateX(11px); }
