@@ -10,9 +10,9 @@ Thanks for helping! A few guidelines to keep things smooth.
 
 ## Development setup
 
-1. Install Rust (`https://rustup.rs`), Node.js 18+ and the Tauri prerequisites for your OS: https://tauri.app/start/prerequisites/
-2. `npm install`
-3. `npm run dev` starts the app with the web view reloading on changes to `src/`. Rust changes trigger a rebuild.
+1. Install Rust (`https://rustup.rs`), Node.js 22+, pnpm (https://pnpm.io/installation) and the Tauri prerequisites for your OS: https://tauri.app/start/prerequisites/
+2. `pnpm install`
+3. `pnpm dev` starts the app with the web view reloading on changes to `src/`. Rust changes trigger a rebuild.
 
 ## Before opening a pull request
 
@@ -24,6 +24,8 @@ cargo test
 ```
 
 CI runs the same checks on macOS, Windows and Linux.
+
+If someone using Portkeeper would notice your change, add a line under **Unreleased** in `CHANGELOG.md`, written for them rather than for developers. That section becomes the release notes and the "What's new" text in the app.
 
 ## Reporting a platform bug
 

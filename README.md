@@ -120,12 +120,12 @@ Versions before 0.4.0 can't update themselves: download the latest version once 
 
 ## Build from source
 
-You need [Rust](https://rustup.rs), Node.js 18+ and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your system.
+You need [Rust](https://rustup.rs), Node.js 22+, [pnpm](https://pnpm.io/installation) and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your system.
 
 ```bash
-npm install
-npm run dev      # run the app
-npm run build    # installers in src-tauri/target/release/bundle/
+pnpm install
+pnpm dev      # run the app
+pnpm build    # installers in src-tauri/target/release/bundle/
 ```
 
 - `src-tauri/` is the Rust side: `ports.rs` (listening sockets, process tree, launch commands), `docker.rs`, `probe.rs` (does the port answer), `launch.rs` (Closed list and relaunch), `settings.rs`, `lib.rs` (tray, window, Liquid Glass, native animations).
@@ -134,9 +134,9 @@ npm run build    # installers in src-tauri/target/release/bundle/
 - `cargo test` in `src-tauri/` runs the unit tests; `cargo test -- --ignored` adds the end-to-end ones that start a throwaway `python3` server, stop it and start it again.
 - `portkeeper --dump` prints the raw scan as JSON, useful when reporting a platform-specific bug.
 
-`site/` is the one-page website. `npm run site` copies the app UI into it as a live demo; `npm run deploy:site` publishes it to Cloudflare Pages (run `npx wrangler login` once first).
+`site/` is the one-page website. `pnpm run site` copies the app UI into it as a live demo; `pnpm run deploy:site` publishes it to Cloudflare Pages (run `pnpm dlx wrangler@4.151.0 login` once first).
 
-Releases are built by GitHub Actions when a `v*` tag is pushed. Bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml` first. The workflow signs the update bundles with the `TAURI_SIGNING_PRIVATE_KEY` secret and publishes `latest.json`, which installed copies read to find the update.
+Releases are built by GitHub Actions when a `v*` tag is pushed. First bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, and move the **Unreleased** notes in [CHANGELOG.md](CHANGELOG.md) under the new version: that section becomes the release notes and the text the app shows when it offers the update (the workflow refuses a tag without one). The workflow signs the update bundles with the `TAURI_SIGNING_PRIVATE_KEY` secret and publishes `latest.json`, which installed copies read to find the update.
 
 ## Contributing
 

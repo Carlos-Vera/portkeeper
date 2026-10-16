@@ -205,7 +205,10 @@ pub fn project_key(id: &str) -> Option<String> {
 }
 
 fn valid_ref(s: &str) -> bool {
+    // Never starts with '-': ids and names cannot, and it keeps "-f"-style values from
+    // being read as flags by the docker CLI.
     !s.is_empty()
+        && !s.starts_with('-')
         && s.chars()
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '.' | '-'))
 }

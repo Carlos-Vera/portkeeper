@@ -1,0 +1,10 @@
+# Opens a PR when a pinned action has a new release, so the SHAs don't go stale.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # Wait a day before proposing a new release: compromised versions are usually pulled within hours.
+    cooldown:
+      default-days: 1

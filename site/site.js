@@ -48,7 +48,11 @@ window.addEventListener("message", (e) => {
   // Installer links use releases/latest/download/<version-free name>; only the label needs the version.
   fetch("https://api.github.com/repos/" + REPO + "/releases/latest")
     .then((r) => (r.ok ? r.json() : null))
-    .then((rel) => { if (rel && rel.tag_name) document.getElementById("ver").textContent = rel.tag_name; })
+    .then((rel) => {
+      if (!rel || !rel.tag_name) return;
+      document.getElementById("ver").textContent = rel.tag_name;
+      renderNews(rel.tag_name, rel.body, rel.html_url);
+    })
     .catch(() => {});
   // Star count.
   fetch("https://api.github.com/repos/" + REPO)
@@ -62,6 +66,35 @@ window.addEventListener("message", (e) => {
     })
     .catch(() => {});
 })();
+
+/**
+ * "What's new": the latest release notes (the CHANGELOG.md section the release workflow
+ * publishes). Only text is used, never HTML: "### Group" lines become small labels,
+ * "- item" lines become bullets, everything from the "---" separator on is skipped.
+ * Releases without bullet lines (the ones before the changelog existed) show nothing.
+ */
+function renderNews(tag, body, url) {
+  const plain = (s) => s.replace(/`([^`]*)`/g, "$1").replace(/\*\*([^*]*)\*\*/g, "$1").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").trim();
+  const items = [];
+  for (const raw of String(body || "").split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line === "---") break;
+    if (/^###\s+/.test(line)) items.push({ group: plain(line.replace(/^###\s+/, "")) });
+    else if (/^[-*]\s+/.test(line)) items.push({ text: plain(line.replace(/^[-*]\s+/, "")) });
+  }
+  if (!items.some((i) => i.text)) return;
+  const list = document.getElementById("news-list");
+  list.replaceChildren();
+  for (const i of items) {
+    const li = document.createElement("li");
+    if (i.group) li.className = "group";
+    li.textContent = i.group || i.text;
+    list.appendChild(li);
+  }
+  document.getElementById("news-ver").textContent = tag;
+  if (url) document.getElementById("news-release").href = url;
+  document.getElementById("news").hidden = false;
+}
 
 // Copy an install command.
 for (const b of document.querySelectorAll(".cli .copy")) {

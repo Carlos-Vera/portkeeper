@@ -37,10 +37,16 @@ pub fn responds(port: u16, tech: Option<&str>) -> bool {
     matches!(s.read(&mut buf), Ok(n) if n > 0)
 }
 
+/// More ports than any machine shows at once; keeps one-thread-per-port bounded.
+const MAX_PROBES: usize = 256;
+
 /// Probe many ports at once; bounded by the longest single probe, not their sum.
 pub fn probe_all(ports: &[(u16, Option<String>)]) -> HashMap<u16, bool> {
+    let mut seen = std::collections::HashSet::new();
     let handles: Vec<_> = ports
         .iter()
+        .filter(|(port, _)| seen.insert(*port))
+        .take(MAX_PROBES)
         .cloned()
         .map(|(port, tech)| std::thread::spawn(move || (port, responds(port, tech.as_deref()))))
         .collect();
@@ -50,18 +56,26 @@ pub fn probe_all(ports: &[(u16, Option<String>)]) -> HashMap<u16, bool> {
 #[cfg(test)]
 mod tests {
     use super::responds;
-    use std::io::Write;
+    use std::io::{Read, Write};
     use std::net::TcpListener;
+    use std::time::Duration;
 
     #[test]
     fn answering_server_is_green_and_silent_one_is_not() {
-        // Answers every connection with a minimal HTTP response.
+        // Answers every connection with a minimal HTTP response, after reading the
+        // request like a real server does. That read matters on Windows: closing a
+        // socket that still holds unread input sends a reset instead of a clean close,
+        // and the peer then loses the response bytes (the probe saw nothing and the
+        // test failed at random on the Windows runner).
         let ok = TcpListener::bind("127.0.0.1:0").unwrap();
         let ok_port = ok.local_addr().unwrap().port();
         std::thread::spawn(move || {
             for c in ok.incoming().flatten() {
                 let mut c = c;
+                let _ = c.set_read_timeout(Some(Duration::from_secs(2)));
+                let _ = c.read(&mut [0u8; 512]);
                 let _ = c.write_all(b"HTTP/1.0 204 No Content\r\n\r\n");
+                let _ = c.flush();
             }
         });
         // Listens but never reads or writes: like a server still booting.

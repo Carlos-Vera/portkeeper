@@ -1,5 +1,6 @@
 mod docker;
 mod launch;
+mod placement;
 mod ports;
 mod probe;
 mod settings;
@@ -10,7 +11,10 @@ use std::sync::Mutex;
 
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Rect, WebviewWindow};
+use tauri::{
+    AppHandle, LogicalPosition, LogicalSize, Manager, Monitor, PhysicalPosition, Rect,
+    WebviewWindow,
+};
 use tauri_plugin_autostart::ManagerExt as _;
 
 const WIDTH: f64 = 290.0;
@@ -35,6 +39,10 @@ struct SettingsDto {
 }
 
 type SettingsState = Mutex<settings::Store>;
+
+/// PIDs in the last `list_ports` scan: the only ones the web view may stop.
+#[derive(Default)]
+struct ScannedPids(Mutex<std::collections::HashSet<u32>>);
 
 const LOCKED: &str = "This project is locked in Portkeeper. Unlock it to stop it.";
 
@@ -93,6 +101,7 @@ async fn install_update(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 async fn list_ports(app: AppHandle) -> Result<Vec<ports::PortInfo>, String> {
     let list = ports::list()?;
+    *app.state::<ScannedPids>().0.lock().unwrap() = list.iter().map(|p| p.pid).collect();
     if let Some(t) = app.try_state::<Mutex<launch::Tracker>>() {
         t.lock().unwrap().update(&list);
     }
@@ -124,6 +133,15 @@ fn forget_closed(app: AppHandle, key: String) {
         .forget(&key);
 }
 
+/// Empty the Closed list in one go ("Forget all").
+#[tauri::command]
+fn forget_all_closed(app: AppHandle) {
+    app.state::<Mutex<launch::Tracker>>()
+        .lock()
+        .unwrap()
+        .forget_all();
+}
+
 /// True when the process runs from a locked project folder.
 fn pid_is_locked(store: &settings::Store, pid: u32) -> bool {
     ports::cwd_of(pid).is_some_and(|cwd| store.is_protected(&settings::key_for_cwd(&cwd)))
@@ -131,6 +149,9 @@ fn pid_is_locked(store: &settings::Store, pid: u32) -> bool {
 
 #[tauri::command]
 async fn kill_process(app: AppHandle, pid: u32, force: bool) -> Result<(), String> {
+    if !app.state::<ScannedPids>().0.lock().unwrap().contains(&pid) {
+        return Err("That process is no longer in the list.".into());
+    }
     // Enforced here too, not only in the UI.
     if pid_is_locked(&app.state::<SettingsState>().lock().unwrap(), pid) {
         return Err(LOCKED.into());
@@ -167,10 +188,74 @@ async fn docker_logs(name: String) -> Result<(), String> {
 
 #[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
-    if !(url.starts_with("http://") || url.starts_with("https://")) {
-        return Err("only http(s) URLs can be opened".into());
+    if !is_allowed_url(&url) {
+        return Err("only local http://localhost:<port> URLs can be opened".into());
     }
     tauri_plugin_opener::open_url(url, None::<&str>).map_err(|e| e.to_string())
+}
+
+const DONATE_URL: &str = "https://buymeacoffee.com/maparisidef";
+const RELEASE_URL: &str = "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v";
+
+/// The UI only ever opens a local port, the donation page or one of Portkeeper's own
+/// release pages; anything else is refused, so a compromised web view cannot send the
+/// browser to an arbitrary site.
+fn is_allowed_url(url: &str) -> bool {
+    if url == DONATE_URL {
+        return true;
+    }
+    if let Some(version) = url.strip_prefix(RELEASE_URL) {
+        // Only a version after "tag/v": no "..", query or fragment that could point elsewhere.
+        return !version.is_empty()
+            && version
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-'));
+    }
+    let Some(rest) = url.strip_prefix("http://") else {
+        return false;
+    };
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or("");
+    let Some((host, port)) = authority.rsplit_once(':') else {
+        return false;
+    };
+    matches!(host, "localhost" | "127.0.0.1" | "[::1]") && port.parse::<u16>().is_ok()
+}
+
+#[cfg(test)]
+mod url_tests {
+    use super::is_allowed_url;
+
+    #[test]
+    fn only_local_ports_and_the_donation_page() {
+        for ok in [
+            "http://localhost:3000",
+            "http://localhost:3000/",
+            "http://127.0.0.1:8080/path?x=1",
+            "http://[::1]:5173",
+            super::DONATE_URL,
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v0.5.0",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v1.0.0-beta.1",
+        ] {
+            assert!(is_allowed_url(ok), "{ok}");
+        }
+        for bad in [
+            "https://evil.example",
+            "http://localhost.evil.example:80",
+            "http://localhost:3000@evil.example/",
+            "http://localhost",
+            "http://localhost:abc",
+            "javascript:alert(1)",
+            "file:///etc/passwd",
+            "https://buymeacoffee.com/someone-else",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v0.5.0/../../../evil",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v0.5.0?x=1",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases",
+            "https://github.com/someone-else/portkeeper/releases/tag/v0.5.0",
+        ] {
+            assert!(!is_allowed_url(bad), "{bad}");
+        }
+    }
 }
 
 /// Which of these ports answer right now. `ports` = [[port, tech], …].
@@ -606,68 +691,112 @@ fn hide(app: &AppHandle) {
     let _ = win.hide();
 }
 
-/// Place the widget next to the tray icon (below it on macOS, above it on a bottom taskbar).
+/// Place the widget next to the tray icon (below it on macOS, above it on a bottom taskbar),
+/// or in a corner when there is no icon position. The geometry lives in `placement.rs`.
 fn place_near(app: &AppHandle, win: &WebviewWindow, icon: Option<Rect>) {
-    let Some(icon) = icon.filter(|r| valid_rect(app, r)) else {
-        place_in_corner(app, win);
-        return;
+    let monitors = app.available_monitors().unwrap_or_default();
+    let screens: Vec<placement::Screen> = monitors.iter().map(screen_of).collect();
+    let size = window_size(win);
+    let found = icon.and_then(|r| placement::icon_screen(|s| icon_area(&r, s), &screens));
+    let (p, scale) = match found {
+        Some((i, icon)) => (
+            placement::near_icon(icon, &screens[i], size),
+            screens[i].scale,
+        ),
+        None => {
+            let Some(m) = win.primary_monitor().ok().flatten() else {
+                return;
+            };
+            let screen = screen_of(&m);
+            (placement::corner(&screen, size, bar_on_top()), screen.scale)
+        }
     };
+    app.state::<GrowUp>().0.store(p.grow_up, Ordering::Relaxed);
+    move_to(win, LogicalPosition::new(p.x, p.y), scale);
+}
+
+/// The tray rect is on a real screen (not macOS's placeholder right after launch).
+fn icon_on_a_screen(app: &AppHandle, r: &Rect) -> bool {
+    let monitors = app.available_monitors().unwrap_or_default();
+    let screens: Vec<placement::Screen> = monitors.iter().map(screen_of).collect();
+    placement::icon_screen(|s| icon_area(r, s), &screens).is_some()
+}
+
+/// The tray icon rect in logical points, converted with scale `s`.
+fn icon_area(r: &Rect, s: f64) -> placement::Area {
+    let pos = r.position.to_logical::<f64>(s);
+    let size = r.size.to_logical::<f64>(s);
+    placement::Area::new(pos.x, pos.y, size.width, size.height)
+}
+
+/// A monitor's bounds and work area (minus menu bar, taskbar, panels) in logical points.
+fn screen_of(m: &Monitor) -> placement::Screen {
+    let s = m.scale_factor();
+    let (pos, size) = (
+        m.position().to_logical::<f64>(s),
+        m.size().to_logical::<f64>(s),
+    );
+    let work = m.work_area();
+    let (wpos, wsize) = (
+        work.position.to_logical::<f64>(s),
+        work.size.to_logical::<f64>(s),
+    );
+    placement::Screen {
+        bounds: placement::Area::new(pos.x, pos.y, size.width, size.height),
+        work: placement::Area::new(wpos.x, wpos.y, wsize.width, wsize.height),
+        scale: s,
+    }
+}
+
+/// The desktop keeps its bar at the top even when the work area does not show it: the
+/// macOS menu bar, and GNOME-style desktops (on Wayland the work area is the whole screen).
+fn bar_on_top() -> bool {
+    if cfg!(target_os = "macos") {
+        return true;
+    }
+    if !cfg!(target_os = "linux") {
+        return false;
+    }
+    let desktop = std::env::var("XDG_CURRENT_DESKTOP")
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    ["gnome", "unity", "pantheon"]
+        .iter()
+        .any(|d| desktop.contains(d))
+}
+
+fn window_size(win: &WebviewWindow) -> (f64, f64) {
     let scale = win.scale_factor().unwrap_or(1.0);
-    let pos = icon.position.to_physical::<f64>(scale);
-    let size = icon.size.to_physical::<f64>(scale);
-    let Some(m) = app.monitor_from_point(pos.x, pos.y).ok().flatten() else {
-        return;
-    };
-    let (mx, my) = (m.position().x as f64, m.position().y as f64);
-    let (mw, mh) = (m.size().width as f64, m.size().height as f64);
-    let ws = win
-        .outer_size()
-        .map(|s| (s.width as f64, s.height as f64))
-        .unwrap_or((WIDTH * scale, 200.0));
-    let gap = 6.0 * scale;
-    let x = (pos.x + size.width / 2.0 - ws.0 / 2.0).clamp(mx + gap, mx + mw - ws.0 - gap);
-    let grow_up = pos.y > my + mh / 2.0;
-    let y = if grow_up {
-        pos.y - ws.1 - gap
-    } else {
-        pos.y + size.height + gap
-    };
-    app.state::<GrowUp>().0.store(grow_up, Ordering::Relaxed);
-    let _ = win.set_position(PhysicalPosition::new(x.round() as i32, y.round() as i32));
+    win.outer_size()
+        .map(|s| s.to_logical::<f64>(scale))
+        .map(|s| (s.width, s.height))
+        .unwrap_or((WIDTH, 200.0))
 }
 
-/// Right after launch (or when the menu bar is full and the icon is hidden) macOS reports
-/// a placeholder rect at the bottom-left corner. Only trust rects that sit on a screen.
-fn valid_rect(app: &AppHandle, r: &Rect) -> bool {
-    let size = r.size.to_physical::<f64>(1.0);
-    let pos = r.position.to_physical::<f64>(1.0);
-    size.height > 0.0
-        && (pos.x, pos.y) != (0.0, 0.0)
-        && matches!(app.monitor_from_point(pos.x, pos.y), Ok(Some(_)))
-}
-
-/// No usable tray position: top-right corner on macOS, bottom-right elsewhere.
-fn place_in_corner(app: &AppHandle, win: &WebviewWindow) {
-    let Some(m) = win.primary_monitor().ok().flatten() else {
+/// macOS: move the panel now, in points. Tauri's `set_position` lands later on the main
+/// queue, after `native_show` has already read the frame to animate to, and a physical
+/// position would be divided by the scale of the screen the window is on now.
+#[cfg(target_os = "macos")]
+fn move_to(win: &WebviewWindow, p: LogicalPosition<f64>, _scale: f64) {
+    use objc2::MainThreadMarker;
+    use objc2_app_kit::{NSScreen, NSWindow};
+    use objc2_foundation::NSPoint;
+    let (Ok(ptr), Some(mtm)) = (win.ns_window(), MainThreadMarker::new()) else {
         return;
     };
-    let scale = m.scale_factor();
-    let ws = win
-        .outer_size()
-        .map(|s| (s.width as f64, s.height as f64))
-        .unwrap_or((WIDTH * scale, 200.0));
-    let (mx, my) = (m.position().x as f64, m.position().y as f64);
-    let (mw, mh) = (m.size().width as f64, m.size().height as f64);
-    let gap = 8.0 * scale;
-    let x = mx + mw - ws.0 - gap;
-    let grow_up = !cfg!(target_os = "macos");
-    let y = if grow_up {
-        my + mh - ws.1 - 56.0 * scale
-    } else {
-        my + 38.0 * scale
+    // Cocoa counts y up from the bottom of the primary screen (the one with the menu bar).
+    let Some(primary) = NSScreen::screens(mtm).firstObject() else {
+        return;
     };
-    app.state::<GrowUp>().0.store(grow_up, Ordering::Relaxed);
-    let _ = win.set_position(PhysicalPosition::new(x.round() as i32, y.round() as i32));
+    // SAFETY: Tauri hands us the live NSWindow; MainThreadMarker proved the thread.
+    let ns: &NSWindow = unsafe { &*(ptr as *const NSWindow) };
+    ns.setFrameTopLeftPoint(NSPoint::new(p.x, primary.frame().size.height - p.y));
+}
+
+/// Windows and Linux position windows in pixels of the target screen.
+#[cfg(not(target_os = "macos"))]
+fn move_to(win: &WebviewWindow, p: LogicalPosition<f64>, scale: f64) {
+    let _ = win.set_position(p.to_physical::<i32>(scale));
 }
 
 fn show(app: &AppHandle, icon: Option<Rect>) {
@@ -762,6 +891,7 @@ pub fn run() {
             None,
         ))
         .manage(GrowUp(AtomicBool::new(false)))
+        .manage(ScannedPids::default())
         .invoke_handler(tauri::generate_handler![
             list_ports,
             kill_process,
@@ -776,6 +906,7 @@ pub fn run() {
             list_closed,
             relaunch,
             forget_closed,
+            forget_all_closed,
             set_setting,
             set_theme,
             set_lang,
@@ -861,7 +992,7 @@ pub fn run() {
                             .rect()
                             .ok()
                             .flatten()
-                            .filter(|r| valid_rect(&handle, r));
+                            .filter(|r| icon_on_a_screen(&handle, r));
                         if rect.is_some() {
                             break;
                         }

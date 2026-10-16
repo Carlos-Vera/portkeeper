@@ -38,6 +38,7 @@ const state = {
   confirming: null,
   busy: new Set(),
   update: null, // { version, notes } when GitHub has a newer signed release
+  showNotes: false, // "What's new" unfolded under the update bar
   updating: false,
   stopping: new Map(), // pid or container id -> when Stop was pressed; kept until it is gone
 };
@@ -467,6 +468,19 @@ function closedRows() {
   return rows;
 }
 
+/** "Forget all" under the Closed list, so a long list does not need a click per row. */
+function forgetAllRow() {
+  const li = el("li", "clear");
+  if (state.confirming === "forget-all") {
+    const row = el("div", "row");
+    row.appendChild(confirmBox(t("forgetAllQ", { n: state.closed.length }), [[t("forget"), () => invoke("forget_all_closed").then(() => refresh(true))]]));
+    li.appendChild(row);
+  } else {
+    li.appendChild(btn(t("forgetAll"), t("forgetAll"), () => { state.confirming = "forget-all"; render(); }));
+  }
+  return li;
+}
+
 /** Split rows into sections (by agent or by type); headers only when there are 2+. */
 function sectioned(gs) {
   const sectionOf = (g) => g.agent?.name || "";
@@ -603,6 +617,7 @@ function render() {
   if (state.tab === "closed") {
     list.replaceChildren(...closed);
     if (!closed.length) list.appendChild(el("li", "empty", t("nothingClosed")));
+    if (state.closed.length > 1) list.appendChild(forgetAllRow());
   } else {
     list.replaceChildren(...sectioned(gs));
     if (!gs.length) list.appendChild(el("li", "empty", t("nothingRunning")));
@@ -661,14 +676,49 @@ async function installUpdate() {
     toast(String(e), 5000);
   }
 }
-/** A slim bar under the header while a newer version is available. */
+/**
+ * Release notes (the CHANGELOG.md section the release workflow publishes) as group labels
+ * and bullets. Text only, never HTML; everything from the "---" separator on is skipped.
+ * Returns [] for releases without bullet notes (the ones before the changelog existed).
+ */
+function parseNotes(body) {
+  const plain = (s) => s.replace(/`([^`]*)`/g, "$1").replace(/\*\*([^*]*)\*\*/g, "$1").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").trim();
+  const items = [];
+  for (const raw of String(body || "").split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line === "---") break;
+    if (/^###\s+/.test(line)) items.push({ group: plain(line.replace(/^###\s+/, "")) });
+    else if (/^[-*]\s+/.test(line)) items.push({ text: plain(line.replace(/^[-*]\s+/, "")) });
+  }
+  return items.some((i) => i.text) ? items : [];
+}
+/** A slim bar under the header while a newer version is available; "What's new" unfolds the notes. */
 function renderUpdate() {
   const bar = $("#update");
   bar.classList.toggle("hidden", !state.update);
   if (!state.update) return fit();
-  const msg = el("span", "msg", t("updateAvailable", { v: state.update.version }));
-  if (state.update.notes) msg.title = state.update.notes;
-  bar.replaceChildren(msg, state.updating ? el("span", "spin") : btn(t("update"), t("update"), installUpdate, "primary"));
+  const { version, notes } = state.update;
+  const items = parseNotes(notes);
+  const row = el("div", "urow");
+  const msg = el("span", "msg", t("updateAvailable", { v: version }));
+  if (items.length) {
+    // The message itself unfolds the notes (a second button would not fit next to Update).
+    msg.classList.add("more");
+    msg.title = t(state.showNotes ? "hide" : "whatsNew");
+    msg.addEventListener("click", () => { state.showNotes = !state.showNotes; renderUpdate(); });
+  } else if (notes) {
+    msg.title = notes; // old-style notes: tooltip only
+  }
+  bar.classList.toggle("open", items.length > 0 && state.showNotes);
+  row.appendChild(msg);
+  row.appendChild(state.updating ? el("span", "spin") : btn(t("update"), t("update"), installUpdate, "primary"));
+  bar.replaceChildren(row);
+  if (items.length && state.showNotes) {
+    const list = el("ul", "notes");
+    for (const i of items) list.appendChild(el("li", i.group ? "group" : "", i.group || i.text));
+    bar.appendChild(list);
+    bar.appendChild(btn(t("allChanges"), t("allChanges"), () => call("open_url", { url: `https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v${version}` }), "link"));
+  }
   fit();
 }
 

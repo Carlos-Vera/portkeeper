@@ -71,6 +71,10 @@ ul { list-style: none; }
 .row:hover { background: var(--hover); }
 .row.multi { cursor: pointer; }
 .empty { color: var(--dim); padding: 8px; }
+.clear { display: flex; justify-content: flex-end; padding: 2px 4px 0; }
+.clear > button { color: var(--dim); font-size: 11px; padding: 3px 8px; border-radius: 5px; }
+.clear > button:hover { background: var(--faint); color: var(--fg); }
+.clear .row { flex: 1; }
 
 /* brand glyph, white */
 .tile { width: 22px; height: 22px; flex: none; display: grid; place-items: center; }
@@ -102,8 +106,8 @@ ul { list-style: none; }
 .open > .row .chev .ico { transform: rotate(180deg); }
 
 .act { display: flex; align-items: center; gap: 1px; }
-.act.hov { display: none; }
-.row:hover .act.hov { display: flex; }
+.act.hov { visibility: hidden; } /* kept in the layout so the title does not reflow on hover */
+.row:hover .act.hov { visibility: visible; }
 .act button { height: 20px; min-width: 20px; padding: 0 5px; border-radius: 5px; color: var(--dim); font-size: 11px; display: grid; place-items: center; }
 .act .ico { width: 10px; height: 10px; }
 .act .ico.play { width: 11px; height: 11px; }
@@ -183,8 +187,23 @@ body.win, body.win #card { background: #0b0b0d; }
 body.win.theme-light, body.win.theme-light #card { background: #fff; }
 
 /* New version available */
-#update { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 8px 6px; padding: 5px 5px 5px 10px;
+#update { margin: 2px 8px 6px; padding: 5px 5px 5px 10px;
   border-radius: 8px; background: var(--hover); box-shadow: inset 0 0 0 .5px var(--edge); }
+#update .urow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#update .msg.more { cursor: pointer; }
+#update .msg.more:hover { text-decoration: underline; text-underline-offset: 2px; }
+/* Drawn chevron (text glyphs render hairline-thin on Windows). */
+#update .msg.more::after { content: ""; display: inline-block; width: 5px; height: 5px; margin: 0 2px 2px 7px;
+  border-right: 1.5px solid var(--dim); border-bottom: 1.5px solid var(--dim); transform: rotate(45deg); transition: transform .15s; }
+#update.open .msg.more::after { transform: rotate(-135deg); margin-bottom: -1px; }
+#update .notes { margin: 6px 0 2px; padding: 0 4px 0 0; list-style: none; max-height: 150px; overflow-y: auto; }
+#update .notes li { position: relative; padding-left: 12px; margin-top: 3px; font-size: 11px; line-height: 1.35; color: var(--fg); }
+#update .notes li::before { content: ""; position: absolute; left: 1px; top: .5em; width: 4px; height: 4px; border-radius: 50%; background: var(--dim); }
+#update .notes li.group { padding-left: 0; margin-top: 7px; font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); }
+#update .notes li.group::before { display: none; }
+#update .notes li.group:first-child { margin-top: 2px; }
+#update .link { display: block; margin: 4px 0 2px; padding: 0; font-size: 10.5px; color: var(--dim); text-decoration: underline; text-underline-offset: 2px; }
+#update .link:hover { color: var(--fg); }
 #update .msg { color: var(--fg); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #update .msg::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--on); margin: 0 7px 1px 0; }
 #update .primary { height: 22px; padding: 0 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--fg); color: var(--bg); }
