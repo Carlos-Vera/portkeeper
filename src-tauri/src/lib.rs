@@ -187,10 +187,58 @@ async fn docker_logs(name: String) -> Result<(), String> {
 
 #[tauri::command]
 fn open_url(url: String) -> Result<(), String> {
-    if !(url.starts_with("http://") || url.starts_with("https://")) {
-        return Err("only http(s) URLs can be opened".into());
+    if !is_allowed_url(&url) {
+        return Err("only local http://localhost:<port> URLs can be opened".into());
     }
     tauri_plugin_opener::open_url(url, None::<&str>).map_err(|e| e.to_string())
+}
+
+const DONATE_URL: &str = "https://buymeacoffee.com/maparisidef";
+
+/// The UI only ever opens a local port or the donation page; anything else is refused,
+/// so a compromised web view cannot send the browser to an arbitrary site.
+fn is_allowed_url(url: &str) -> bool {
+    if url == DONATE_URL {
+        return true;
+    }
+    let Some(rest) = url.strip_prefix("http://") else {
+        return false;
+    };
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or("");
+    let Some((host, port)) = authority.rsplit_once(':') else {
+        return false;
+    };
+    matches!(host, "localhost" | "127.0.0.1" | "[::1]") && port.parse::<u16>().is_ok()
+}
+
+#[cfg(test)]
+mod url_tests {
+    use super::is_allowed_url;
+
+    #[test]
+    fn only_local_ports_and_the_donation_page() {
+        for ok in [
+            "http://localhost:3000",
+            "http://localhost:3000/",
+            "http://127.0.0.1:8080/path?x=1",
+            "http://[::1]:5173",
+            super::DONATE_URL,
+        ] {
+            assert!(is_allowed_url(ok), "{ok}");
+        }
+        for bad in [
+            "https://evil.example",
+            "http://localhost.evil.example:80",
+            "http://localhost:3000@evil.example/",
+            "http://localhost",
+            "http://localhost:abc",
+            "javascript:alert(1)",
+            "file:///etc/passwd",
+            "https://buymeacoffee.com/someone-else",
+        ] {
+            assert!(!is_allowed_url(bad), "{bad}");
+        }
+    }
 }
 
 /// Which of these ports answer right now. `ports` = [[port, tech], …].

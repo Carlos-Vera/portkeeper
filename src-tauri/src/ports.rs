@@ -86,8 +86,26 @@ fn looks_secret_value(v: &str) -> bool {
         || v.starts_with("eyJ")
 }
 
+/// `scheme://user:password@host…` → `scheme://user:•••@host…` (database and broker URLs).
+fn mask_userinfo(a: &str) -> Option<String> {
+    let (scheme, rest) = a.split_once("://")?;
+    if scheme.is_empty() {
+        return None;
+    }
+    let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    let authority = &rest[..end];
+    let at = authority.rfind('@')?;
+    let (user, _password) = authority[..at].split_once(':')?;
+    Some(format!(
+        "{scheme}://{user}:•••@{}{}",
+        &authority[at + 1..],
+        &rest[end..]
+    ))
+}
+
 /// Mask secrets in argv: values after `--token`, `KEY=value` pairs with secret-ish names,
-/// and long opaque strings. Returns the masked argv and whether anything was masked.
+/// passwords inside URLs, and long opaque strings. Returns the masked argv and whether
+/// anything was masked.
 pub fn redact(argv: &[String]) -> (Vec<String>, bool) {
     let mut out = Vec::with_capacity(argv.len());
     let mut hit = false;
@@ -97,6 +115,11 @@ pub fn redact(argv: &[String]) -> (Vec<String>, bool) {
             out.push("•••".to_string());
             hit = true;
             mask_next = false;
+            continue;
+        }
+        if let Some(masked) = mask_userinfo(a) {
+            out.push(masked);
+            hit = true;
             continue;
         }
         if let Some((k, _)) = a.split_once('=') {
@@ -777,6 +800,19 @@ mod tests {
         let (m, hit) = redact(&v(&["run", "eyJhbGciOiJub25lIn0fakeTokenForTests"]));
         assert!(hit);
         assert_eq!(m[1], "•••");
+        // Passwords inside connection URLs, also when the URL is an env-style value.
+        let (m, hit) = redact(&v(&[
+            "psql",
+            "postgres://app:hunter2@localhost:5432/db?ssl=1",
+        ]));
+        assert!(hit);
+        assert_eq!(m[1], "postgres://app:•••@localhost:5432/db?ssl=1");
+        let (m, hit) = redact(&v(&["DATABASE_URL=mysql://root:pw@db/x"]));
+        assert!(hit);
+        assert_eq!(m[0], "DATABASE_URL=mysql://root:•••@db/x");
+        let (m, hit) = redact(&v(&["curl", "https://example.com/a@b"]));
+        assert!(!hit);
+        assert_eq!(m[1], "https://example.com/a@b");
         let (m, hit) = redact(&v(&[
             "node",
             "/Users/x/node_modules/.bin/vite",

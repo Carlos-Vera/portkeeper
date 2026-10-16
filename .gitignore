@@ -7,3 +7,6 @@ dist/
 .claude/
 demo-server/
 site/app/
+.wrangler/
+.env
+*.key

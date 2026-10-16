@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 CHROME="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 PORT=4179
-python3 -m http.server "$PORT" >/dev/null 2>&1 &
+python3 -m http.server --bind 127.0.0.1 "$PORT" >/dev/null 2>&1 &
 SERVER=$!
 trap 'kill $SERVER' EXIT
 sleep 1
