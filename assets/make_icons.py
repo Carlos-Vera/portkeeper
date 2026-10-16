@@ -4,7 +4,7 @@ the lower one is the app's green "running" dot.
 
 Writes assets/icon.png (1024px app icon on the macOS grid), site/favicon.png,
 site/img/icon-256.png and src-tauri/icons/tray.png (macOS template icon).
-Requires Pillow. `npm run icons` runs this and lets Tauri derive every size."""
+Requires Pillow. `pnpm icons` runs this and lets Tauri derive every size."""
 from pathlib import Path
 from PIL import Image, ImageDraw
 
