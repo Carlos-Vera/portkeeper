@@ -82,6 +82,20 @@ h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 600; letter-spacing: -.03em
 .meta a { color: var(--dim); border-bottom: 1px solid var(--line); }
 .meta a:hover { color: var(--fg); }
 
+/* What's new: the latest release notes, from the GitHub API */
+.news { margin: 48px auto 0; padding: 20px 22px 18px; border-radius: 14px; background: var(--soft); text-align: left; }
+.news h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.news h2 span { color: var(--dim); font-weight: 500; }
+.news ul { margin: 10px 0 0; padding: 0; list-style: none; }
+.news li { position: relative; padding-left: 16px; margin-top: 5px; color: var(--dim); font-size: 14.5px; }
+.news li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 6px; height: 6px; border-radius: 50%; background: var(--on); }
+.news li.group { padding-left: 0; margin-top: 12px; font: 11px/1.3 var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: .08em; }
+.news li.group::before { display: none; }
+.news li.group:first-child { margin-top: 10px; }
+.news p { margin: 14px 0 0; font: 12px/1.7 var(--mono); color: var(--faint); }
+.news p a { color: var(--dim); border-bottom: 1px solid var(--line); }
+.news p a:hover { color: var(--fg); }
+
 .feats { margin: 64px auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line);
   border: 1px solid var(--line); border-radius: 14px; overflow: hidden; text-align: left; }
 .feats div { background: var(--bg); padding: 22px 22px 24px; }
