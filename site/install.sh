@@ -43,6 +43,12 @@ main() {
   TMP="$(mktemp -d)"
   trap 'rm -rf "$TMP"' EXIT
 
+  # Resolve the latest version from the "latest" redirect: the signed assets carry it in
+  # their names (tauri-action 1.0 also versions the macOS .app.tar.gz).
+  TAG="$(curl --proto '=https' --tlsv1.2 -fsSIL -o /dev/null -w '%{url_effective}' "$REPO/releases/latest")"
+  TAG="${TAG##*/}"; VER="${TAG#v}"
+  [ "$VER" != "$TAG" ] && [ -n "$VER" ] || { echo "Could not find the latest release."; exit 1; }
+
   case "$(uname -s)" in
     Darwin)
       case "$(uname -m)" in
@@ -52,9 +58,13 @@ main() {
       esac
       APP_DIR="${PORTKEEPER_APP_DIR:-/Applications}"
       APP="$APP_DIR/Portkeeper.app"
-      echo "Downloading Portkeeper for macOS ($ARCH)…"
-      fetch "$REPO/releases/latest/download/Portkeeper_${ARCH}.app.tar.gz" "$TMP/app.tar.gz"
-      fetch "$REPO/releases/latest/download/Portkeeper_${ARCH}.app.tar.gz.sig" "$TMP/app.tar.gz.sig"
+      echo "Downloading Portkeeper $VER for macOS ($ARCH)…"
+      # Releases built with tauri-action 1.0 name the archive Portkeeper_<ver>_<arch>.app.tar.gz;
+      # older ones Portkeeper_<arch>.app.tar.gz. Try the new name, then the old one.
+      for f in app.tar.gz app.tar.gz.sig; do
+        fetch "$REPO/releases/download/$TAG/Portkeeper_${VER}_${ARCH}.$f" "$TMP/$f" 2>/dev/null \
+          || fetch "$REPO/releases/download/$TAG/Portkeeper_${ARCH}.$f" "$TMP/$f"
+      done
       verify "$TMP/app.tar.gz" "$TMP/app.tar.gz.sig"
       tar -xzf "$TMP/app.tar.gz" -C "$TMP"
       [ -d "$TMP/Portkeeper.app" ] || { echo "Unexpected archive layout"; exit 1; }
@@ -82,10 +92,6 @@ main() {
       [ "$(uname -m)" = "x86_64" ] || { echo "Only x86_64 Linux builds exist for now: $REPO/releases"; exit 1; }
       BIN="$HOME/.local/bin"; APPS="$HOME/.local/share/applications"
       mkdir -p "$BIN" "$APPS"
-      # The signed asset carries the version in its name: resolve it from the "latest" redirect.
-      TAG="$(curl --proto '=https' --tlsv1.2 -fsSIL -o /dev/null -w '%{url_effective}' "$REPO/releases/latest")"
-      TAG="${TAG##*/}"; VER="${TAG#v}"
-      [ "$VER" != "$TAG" ] && [ -n "$VER" ] || { echo "Could not find the latest release."; exit 1; }
       echo "Downloading Portkeeper $VER for Linux (x86_64)…"
       fetch "$REPO/releases/download/$TAG/Portkeeper_${VER}_amd64.AppImage" "$TMP/portkeeper"
       fetch "$REPO/releases/download/$TAG/Portkeeper_${VER}_amd64.AppImage.sig" "$TMP/portkeeper.sig"
