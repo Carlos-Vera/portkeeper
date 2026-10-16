@@ -468,6 +468,19 @@ function closedRows() {
   return rows;
 }
 
+/** "Forget all" under the Closed list, so a long list does not need a click per row. */
+function forgetAllRow() {
+  const li = el("li", "clear");
+  if (state.confirming === "forget-all") {
+    const row = el("div", "row");
+    row.appendChild(confirmBox(t("forgetAllQ", { n: state.closed.length }), [[t("forget"), () => invoke("forget_all_closed").then(() => refresh(true))]]));
+    li.appendChild(row);
+  } else {
+    li.appendChild(btn(t("forgetAll"), t("forgetAll"), () => { state.confirming = "forget-all"; render(); }));
+  }
+  return li;
+}
+
 /** Split rows into sections (by agent or by type); headers only when there are 2+. */
 function sectioned(gs) {
   const sectionOf = (g) => g.agent?.name || "";
@@ -604,6 +617,7 @@ function render() {
   if (state.tab === "closed") {
     list.replaceChildren(...closed);
     if (!closed.length) list.appendChild(el("li", "empty", t("nothingClosed")));
+    if (state.closed.length > 1) list.appendChild(forgetAllRow());
   } else {
     list.replaceChildren(...sectioned(gs));
     if (!gs.length) list.appendChild(el("li", "empty", t("nothingRunning")));

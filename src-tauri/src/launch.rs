@@ -208,6 +208,13 @@ impl Tracker {
         self.save();
     }
 
+    /// Drop every closed launch (and its captured environment) at once.
+    pub fn forget_all(&mut self) {
+        self.closed.clear();
+        self.envs.clear();
+        self.save();
+    }
+
     /// Start a closed launch again. Returns the log file it writes to.
     pub fn relaunch(&self, key: &str, log_dir: &Path) -> Result<PathBuf, String> {
         let e = self
