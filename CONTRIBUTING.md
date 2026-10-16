@@ -10,7 +10,7 @@ Thanks for helping! A few guidelines to keep things smooth.
 
 ## Development setup
 
-1. Install Rust (`https://rustup.rs`), Node.js 22.13+, pnpm (https://pnpm.io/installation) and the Tauri prerequisites for your OS: https://tauri.app/start/prerequisites/
+1. Install Rust (`https://rustup.rs`), Node.js 22+, pnpm (https://pnpm.io/installation) and the Tauri prerequisites for your OS: https://tauri.app/start/prerequisites/
 2. `pnpm install`
 3. `pnpm dev` starts the app with the web view reloading on changes to `src/`. Rust changes trigger a rebuild.
 

@@ -120,7 +120,7 @@ Versions before 0.4.0 can't update themselves: download the latest version once 
 
 ## Build from source
 
-You need [Rust](https://rustup.rs), Node.js 22.13+, [pnpm](https://pnpm.io/installation) and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your system.
+You need [Rust](https://rustup.rs), Node.js 22+, [pnpm](https://pnpm.io/installation) and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your system.
 
 ```bash
 pnpm install
@@ -134,7 +134,7 @@ pnpm build    # installers in src-tauri/target/release/bundle/
 - `cargo test` in `src-tauri/` runs the unit tests; `cargo test -- --ignored` adds the end-to-end ones that start a throwaway `python3` server, stop it and start it again.
 - `portkeeper --dump` prints the raw scan as JSON, useful when reporting a platform-specific bug.
 
-`site/` is the one-page website. `pnpm run site` copies the app UI into it as a live demo; `pnpm run deploy:site` publishes it to Cloudflare Pages (run `pnpm dlx wrangler@4.151.1 login` once first).
+`site/` is the one-page website. `pnpm run site` copies the app UI into it as a live demo; `pnpm run deploy:site` publishes it to Cloudflare Pages (run `pnpm dlx wrangler@4.151.0 login` once first).
 
 Releases are built by GitHub Actions when a `v*` tag is pushed. Bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml` first. The workflow signs the update bundles with the `TAURI_SIGNING_PRIVATE_KEY` secret and publishes `latest.json`, which installed copies read to find the update.
 
