@@ -1,5 +1,6 @@
 mod docker;
 mod launch;
+mod placement;
 mod ports;
 mod probe;
 mod settings;
@@ -664,66 +665,86 @@ fn hide(app: &AppHandle) {
     let _ = win.hide();
 }
 
-/// Place the widget next to the tray icon (below it on macOS, above it on a bottom taskbar).
+/// Place the widget next to the tray icon (below it on macOS, above it on a bottom taskbar),
+/// or in a corner when there is no icon position. The geometry lives in `placement.rs`.
 fn place_near(app: &AppHandle, win: &WebviewWindow, icon: Option<Rect>) {
-    let Some((m, pos, size)) = icon.and_then(|r| tray_monitor(app, &r)) else {
-        place_in_corner(app, win);
-        return;
+    let monitors = app.available_monitors().unwrap_or_default();
+    let screens: Vec<placement::Screen> = monitors.iter().map(screen_of).collect();
+    let size = window_size(win);
+    let found = icon.and_then(|r| placement::icon_screen(|s| icon_area(&r, s), &screens));
+    let (p, scale) = match found {
+        Some((i, icon)) => (
+            placement::near_icon(icon, &screens[i], size),
+            screens[i].scale,
+        ),
+        None => {
+            let Some(m) = win.primary_monitor().ok().flatten() else {
+                return;
+            };
+            let screen = screen_of(&m);
+            (placement::corner(&screen, size, bar_on_top()), screen.scale)
+        }
     };
-    let (mp, ms) = logical_bounds(&m);
-    let ws = window_size(win);
-    let gap = 6.0;
-    let x = (pos.x + size.width / 2.0 - ws.width / 2.0)
-        .clamp(mp.x + gap, mp.x + ms.width - ws.width - gap);
-    let grow_up = pos.y > mp.y + ms.height / 2.0;
-    // Under a top bar, hang from the bottom edge of the bar itself (the top of the work
-    // area): the icon rect macOS reports can sit lower than the icon really is.
-    let work_top = m.work_area().position.to_logical::<f64>(m.scale_factor()).y;
-    let y = if grow_up {
-        pos.y - ws.height - gap
-    } else {
-        work_top + gap
-    };
-    app.state::<GrowUp>().0.store(grow_up, Ordering::Relaxed);
-    move_to(win, LogicalPosition::new(x, y), m.scale_factor());
+    app.state::<GrowUp>().0.store(p.grow_up, Ordering::Relaxed);
+    move_to(win, LogicalPosition::new(p.x, p.y), scale);
 }
 
-/// The screen the tray icon is on, with the icon rect in that screen's logical points.
-/// The rect comes in physical pixels of the icon's own screen, so with mixed scale factors
-/// (a Retina laptop plus a 1x monitor) each screen is checked with its own scale.
-/// Right after launch (or when the menu bar is full and the icon is hidden) macOS reports
-/// a placeholder rect at the bottom-left corner: that one matches no screen.
-fn tray_monitor(
-    app: &AppHandle,
-    r: &Rect,
-) -> Option<(Monitor, LogicalPosition<f64>, LogicalSize<f64>)> {
-    let raw = r.position.to_physical::<f64>(1.0);
-    if (raw.x, raw.y) == (0.0, 0.0) {
-        return None;
-    }
-    app.available_monitors().ok()?.into_iter().find_map(|m| {
-        let s = m.scale_factor();
-        let pos = r.position.to_logical::<f64>(s);
-        let size = r.size.to_logical::<f64>(s);
-        let (mp, ms) = logical_bounds(&m);
-        // The icon's centre: its top edge can sit a couple of points above the screen.
-        let (cx, cy) = (pos.x + size.width / 2.0, pos.y + size.height / 2.0);
-        let inside =
-            (mp.x..mp.x + ms.width).contains(&cx) && (mp.y..mp.y + ms.height).contains(&cy);
-        (inside && size.height > 0.0).then_some((m, pos, size))
-    })
+/// The tray rect is on a real screen (not macOS's placeholder right after launch).
+fn icon_on_a_screen(app: &AppHandle, r: &Rect) -> bool {
+    let monitors = app.available_monitors().unwrap_or_default();
+    let screens: Vec<placement::Screen> = monitors.iter().map(screen_of).collect();
+    placement::icon_screen(|s| icon_area(r, s), &screens).is_some()
 }
 
-fn logical_bounds(m: &Monitor) -> (LogicalPosition<f64>, LogicalSize<f64>) {
+/// The tray icon rect in logical points, converted with scale `s`.
+fn icon_area(r: &Rect, s: f64) -> placement::Area {
+    let pos = r.position.to_logical::<f64>(s);
+    let size = r.size.to_logical::<f64>(s);
+    placement::Area::new(pos.x, pos.y, size.width, size.height)
+}
+
+/// A monitor's bounds and work area (minus menu bar, taskbar, panels) in logical points.
+fn screen_of(m: &Monitor) -> placement::Screen {
     let s = m.scale_factor();
-    (m.position().to_logical(s), m.size().to_logical(s))
+    let (pos, size) = (
+        m.position().to_logical::<f64>(s),
+        m.size().to_logical::<f64>(s),
+    );
+    let work = m.work_area();
+    let (wpos, wsize) = (
+        work.position.to_logical::<f64>(s),
+        work.size.to_logical::<f64>(s),
+    );
+    placement::Screen {
+        bounds: placement::Area::new(pos.x, pos.y, size.width, size.height),
+        work: placement::Area::new(wpos.x, wpos.y, wsize.width, wsize.height),
+        scale: s,
+    }
 }
 
-fn window_size(win: &WebviewWindow) -> LogicalSize<f64> {
+/// The desktop keeps its bar at the top even when the work area does not show it: the
+/// macOS menu bar, and GNOME-style desktops (on Wayland the work area is the whole screen).
+fn bar_on_top() -> bool {
+    if cfg!(target_os = "macos") {
+        return true;
+    }
+    if !cfg!(target_os = "linux") {
+        return false;
+    }
+    let desktop = std::env::var("XDG_CURRENT_DESKTOP")
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    ["gnome", "unity", "pantheon"]
+        .iter()
+        .any(|d| desktop.contains(d))
+}
+
+fn window_size(win: &WebviewWindow) -> (f64, f64) {
     let scale = win.scale_factor().unwrap_or(1.0);
     win.outer_size()
-        .map(|s| s.to_logical(scale))
-        .unwrap_or(LogicalSize::new(WIDTH, 200.0))
+        .map(|s| s.to_logical::<f64>(scale))
+        .map(|s| (s.width, s.height))
+        .unwrap_or((WIDTH, 200.0))
 }
 
 /// macOS: move the panel now, in points. Tauri's `set_position` lands later on the main
@@ -750,25 +771,6 @@ fn move_to(win: &WebviewWindow, p: LogicalPosition<f64>, _scale: f64) {
 #[cfg(not(target_os = "macos"))]
 fn move_to(win: &WebviewWindow, p: LogicalPosition<f64>, scale: f64) {
     let _ = win.set_position(p.to_physical::<i32>(scale));
-}
-
-/// No usable tray position: top-right corner on macOS, bottom-right elsewhere.
-fn place_in_corner(app: &AppHandle, win: &WebviewWindow) {
-    let Some(m) = win.primary_monitor().ok().flatten() else {
-        return;
-    };
-    let (mp, ms) = logical_bounds(&m);
-    let ws = window_size(win);
-    let gap = 8.0;
-    let x = mp.x + ms.width - ws.width - gap;
-    let grow_up = !cfg!(target_os = "macos");
-    let y = if grow_up {
-        mp.y + ms.height - ws.height - 56.0
-    } else {
-        mp.y + 38.0
-    };
-    app.state::<GrowUp>().0.store(grow_up, Ordering::Relaxed);
-    move_to(win, LogicalPosition::new(x, y), m.scale_factor());
 }
 
 fn show(app: &AppHandle, icon: Option<Rect>) {
@@ -941,7 +943,7 @@ pub fn run() {
                             .rect()
                             .ok()
                             .flatten()
-                            .filter(|r| tray_monitor(&handle, r).is_some());
+                            .filter(|r| icon_on_a_screen(&handle, r));
                         if rect.is_some() {
                             break;
                         }
