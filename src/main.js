@@ -93,7 +93,6 @@ async function refresh(force = false) {
       applyTheme(settings);
       setLanguage(settings.lang || "");
       for (const n of document.querySelectorAll("[data-t]")) n.textContent = t(n.dataset.t);
-      $("#min").title = t("minimize");
       $("#gear").title = t("settings");
       state.responding = new Map(Object.entries(responding).map(([k, v]) => [Number(k), v]));
       render();
@@ -626,7 +625,6 @@ for (const t of document.querySelectorAll(".tab")) {
     render();
   });
 }
-$("#min").addEventListener("click", () => invoke("hide_window"));
 const toggleSettings = (open = state.view !== "settings") => { state.view = open ? "settings" : "list"; state.confirming = null; render(); };
 $("#gear").addEventListener("click", () => toggleSettings());
 

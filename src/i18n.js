@@ -1,7 +1,7 @@
 // UI strings. Keys are English; `t(key, vars)` picks the active language.
 const STRINGS = {
   en: {
-    active: "Active", closed: "Closed", settings: "Settings", minimize: "Minimize to the menu bar",
+    active: "Active", closed: "Closed", settings: "Settings",
     appearance: "Appearance", glass: "Glass", dark: "Dark", light: "Light",
     language: "Language", system: "System",
     launchAtLogin: "Launch at login", openOnStart: "Open widget on start", openOnStartHint: "Off: stays in the menu bar until you click it",
@@ -18,7 +18,7 @@ const STRINGS = {
     stoppedContainers: "{n} stopped", now: "now",
   },
   es: {
-    active: "Activos", closed: "Cerrados", settings: "Ajustes", minimize: "Minimizar a la barra de menús",
+    active: "Activos", closed: "Cerrados", settings: "Ajustes",
     appearance: "Apariencia", glass: "Cristal", dark: "Oscuro", light: "Claro",
     language: "Idioma", system: "Sistema",
     launchAtLogin: "Abrir al iniciar sesión", openOnStart: "Mostrar el widget al arrancar", openOnStartHint: "Desactivado: se queda en la barra de menús hasta que lo pulses",
@@ -35,7 +35,7 @@ const STRINGS = {
     stoppedContainers: "{n} parados", now: "ahora",
   },
   fr: {
-    active: "Actifs", closed: "Fermés", settings: "Réglages", minimize: "Réduire dans la barre de menus",
+    active: "Actifs", closed: "Fermés", settings: "Réglages",
     appearance: "Apparence", glass: "Verre", dark: "Sombre", light: "Clair",
     language: "Langue", system: "Système",
     launchAtLogin: "Lancer à l'ouverture de session", openOnStart: "Afficher le widget au démarrage", openOnStartHint: "Désactivé : reste dans la barre de menus jusqu'au clic",
@@ -52,7 +52,7 @@ const STRINGS = {
     stoppedContainers: "{n} arrêtés", now: "maintenant",
   },
   de: {
-    active: "Aktiv", closed: "Beendet", settings: "Einstellungen", minimize: "In die Menüleiste minimieren",
+    active: "Aktiv", closed: "Beendet", settings: "Einstellungen",
     appearance: "Darstellung", glass: "Glas", dark: "Dunkel", light: "Hell",
     language: "Sprache", system: "System",
     launchAtLogin: "Bei Anmeldung starten", openOnStart: "Widget beim Start öffnen", openOnStartHint: "Aus: bleibt in der Menüleiste, bis du darauf klickst",
@@ -69,7 +69,7 @@ const STRINGS = {
     stoppedContainers: "{n} gestoppt", now: "jetzt",
   },
   pt: {
-    active: "Ativos", closed: "Fechados", settings: "Definições", minimize: "Minimizar para a barra de menus",
+    active: "Ativos", closed: "Fechados", settings: "Definições",
     appearance: "Aparência", glass: "Vidro", dark: "Escuro", light: "Claro",
     language: "Idioma", system: "Sistema",
     launchAtLogin: "Abrir ao iniciar sessão", openOnStart: "Mostrar o widget ao arrancar", openOnStartHint: "Desligado: fica na barra de menus até clicares",
