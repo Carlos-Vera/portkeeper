@@ -61,6 +61,7 @@ header .grow { flex: 1; align-self: stretch; }
 .ico.stop { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4.5' y='4.5' width='15' height='15' rx='3.5'/%3E%3C/svg%3E"); }
 .ico.play { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 4.8v14.4c0 .9 1 1.5 1.8 1l11.5-7.2c.7-.5.7-1.5 0-2L8.8 3.8C8 3.3 7 3.9 7 4.8z'/%3E%3C/svg%3E"); }
 .ico.x { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E"); }
+.ico.min { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4' y='10.4' width='16' height='3.2' rx='1.6'/%3E%3C/svg%3E"); }
 
 ul { list-style: none; }
 #list { padding: 0 6px 6px; max-height: 440px; overflow-y: auto; }
@@ -111,6 +112,7 @@ ul { list-style: none; }
 .act button { height: 20px; min-width: 20px; padding: 0 5px; border-radius: 5px; color: var(--dim); font-size: 11px; display: grid; place-items: center; }
 .act .ico { width: 10px; height: 10px; }
 .act .ico.play { width: 11px; height: 11px; }
+.hbtn .ico.min { width: 11px; height: 11px; }
 .hbtn .ico.gear { width: 13px; height: 13px; }
 .act button:hover { background: var(--faint); color: var(--fg); }
 .act button.stop:hover { color: var(--fg); }

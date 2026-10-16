@@ -35,6 +35,7 @@ struct SettingsDto {
     protected: Vec<String>,
     launch_at_login: bool,
     check_updates: bool,
+    close_on_blur: bool,
     version: String,
 }
 
@@ -276,6 +277,7 @@ fn get_settings(app: AppHandle) -> SettingsDto {
         protected: s.protected,
         launch_at_login: app.autolaunch().is_enabled().unwrap_or(false),
         check_updates: s.check_updates,
+        close_on_blur: s.close_on_blur,
         version: app.package_info().version.to_string(),
     }
 }
@@ -293,6 +295,7 @@ fn set_setting(app: AppHandle, name: String, value: bool) -> Result<(), String> 
         "show_on_start" => store.value.show_on_start = value,
         "show_all" => store.value.show_all = value,
         "check_updates" => store.value.check_updates = value,
+        "close_on_blur" => store.value.close_on_blur = value,
         _ => return Err(format!("unknown setting {name}")),
     }
     store.save();
@@ -822,9 +825,15 @@ fn show(app: &AppHandle, icon: Option<Rect>) {
 /// and its toggle arrives right after: that toggle must not reopen the widget.
 static AUTO_HIDDEN_AT: Mutex<Option<std::time::Instant>> = Mutex::new(None);
 
-/// The widget lost focus: close it, like a menu bar extra.
+/// The widget lost focus: close it, like a menu bar extra, if the setting is on.
 fn auto_hide(app: &AppHandle) {
-    if is_visible(app) {
+    let on = app
+        .state::<SettingsState>()
+        .lock()
+        .unwrap()
+        .value
+        .close_on_blur;
+    if on && is_visible(app) {
         *AUTO_HIDDEN_AT.lock().unwrap() = Some(std::time::Instant::now());
         hide(app);
     }

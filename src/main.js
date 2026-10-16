@@ -94,6 +94,7 @@ async function refresh(force = false) {
       applyTheme(settings);
       setLanguage(settings.lang || "");
       for (const n of document.querySelectorAll("[data-t]")) n.textContent = t(n.dataset.t);
+      $("#min").title = t("minimize");
       $("#gear").title = t("settings");
       state.responding = new Map(Object.entries(responding).map(([k, v]) => [Number(k), v]));
       render();
@@ -574,6 +575,7 @@ function renderSettings() {
     toggleRow(t("launchAtLogin"), null, s.launch_at_login, () => setSetting("launch_at_login", !s.launch_at_login)),
     toggleRow(t("openOnStart"), t("openOnStartHint"), s.show_on_start, () => setSetting("show_on_start", !s.show_on_start)),
     toggleRow(t("showAll"), t("showAllHint"), s.show_all, () => setSetting("show_all", !s.show_all)),
+    toggleRow(t("closeOnBlur"), t("closeOnBlurHint"), s.close_on_blur, () => setSetting("close_on_blur", !s.close_on_blur)),
     toggleRow(t("checkUpdates"), t("checkUpdatesHint"), s.check_updates, async () => {
       await setSetting("check_updates", !s.check_updates);
       checkUpdate();
@@ -603,6 +605,7 @@ function renderSettings() {
 }
 
 function render() {
+  $("#min").style.display = state.settings.close_on_blur ? "none" : "";
   const settingsOpen = state.view === "settings";
   $("#settings").classList.toggle("hidden", !settingsOpen);
   $("#list").classList.toggle("hidden", settingsOpen);
@@ -640,6 +643,7 @@ for (const t of document.querySelectorAll(".tab")) {
     render();
   });
 }
+$("#min").addEventListener("click", () => invoke("hide_window"));
 const toggleSettings = (open = state.view !== "settings") => { state.view = open ? "settings" : "list"; state.confirming = null; render(); };
 $("#gear").addEventListener("click", () => toggleSettings());
 
