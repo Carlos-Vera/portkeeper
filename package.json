@@ -3,7 +3,7 @@
   "version": "0.4.1",
   "private": true,
   "description": "Menu bar / tray gadget that shows open ports and Docker containers, and lets you open, stop or kill them.",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
