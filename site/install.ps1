@@ -5,8 +5,11 @@
 # current user. Later updates come from inside the app.
 # Source: https://github.com/MarcAparisiTFG/portkeeper
 $ErrorActionPreference = "Stop"
+# Windows PowerShell 5.1 may still default to TLS 1.0/1.1, which GitHub rejects.
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 $url = "https://github.com/MarcAparisiTFG/portkeeper/releases/latest/download/Portkeeper-Windows-x64-setup.exe"
-$exe = Join-Path $env:TEMP "Portkeeper-setup.exe"
+# A fresh name each run, so nothing else can pre-place a file at a known path.
+$exe = Join-Path $env:TEMP ("Portkeeper-setup-" + [guid]::NewGuid().ToString("N") + ".exe")
 
 Write-Host "Downloading Portkeeper for Windows..."
 Invoke-WebRequest -Uri $url -OutFile $exe -UseBasicParsing
