@@ -4,7 +4,7 @@
   "private": true,
   "description": "Menu bar / tray gadget that shows open ports and Docker containers, and lets you open, stop or kill them.",
   "license": "MIT",
-  "packageManager": "pnpm@12.14.0",
+  "packageManager": "pnpm@11.28.6",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
