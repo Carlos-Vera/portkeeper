@@ -19,4 +19,5 @@
 
 - [ ] `cargo fmt`, `cargo clippy --all-targets -- -D warnings` and `cargo test` pass in `src-tauri/`
 - [ ] New text is added to every language in `src/i18n.js`
+- [ ] Anything a user would notice has a line under **Unreleased** in `CHANGELOG.md`
 - [ ] Nothing in screenshots or test data comes from a real or client project

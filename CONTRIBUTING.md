@@ -25,6 +25,8 @@ cargo test
 
 CI runs the same checks on macOS, Windows and Linux.
 
+If someone using Portkeeper would notice your change, add a line under **Unreleased** in `CHANGELOG.md`, written for them rather than for developers. That section becomes the release notes and the "What's new" text in the app.
+
 ## Reporting a platform bug
 
 Please attach the output of `portkeeper --dump` (the binary lives in `src-tauri/target/<profile>/`), your OS version and how Docker is installed (Docker Desktop, OrbStack, Colima…).
