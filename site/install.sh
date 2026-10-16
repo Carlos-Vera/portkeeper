@@ -72,8 +72,11 @@ main() {
       mv "$APP.new" "$APP"
       xattr -cr "$APP" 2>/dev/null || true
       VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist" 2>/dev/null || echo '?')"
-      [ "${PORTKEEPER_NO_LAUNCH:-}" ] || open "$APP"
-      echo "Portkeeper $VERSION is installed and running in your menu bar."
+      if [ "${PORTKEEPER_NO_LAUNCH:-}" ]; then
+        echo "Portkeeper $VERSION is installed at $APP."
+      else
+        open "$APP"; echo "Portkeeper $VERSION is installed and running in your menu bar."
+      fi
       ;;
     Linux)
       [ "$(uname -m)" = "x86_64" ] || { echo "Only x86_64 Linux builds exist for now: $REPO/releases"; exit 1; }
@@ -99,8 +102,11 @@ Exec="$BIN/portkeeper"
 Terminal=false
 Categories=Development;Utility;
 DESKTOP
-      [ "${PORTKEEPER_NO_LAUNCH:-}" ] || (nohup "$BIN/portkeeper" >/dev/null 2>&1 &)
-      echo "Portkeeper $VER is installed at $BIN/portkeeper and running in your tray."
+      if [ "${PORTKEEPER_NO_LAUNCH:-}" ]; then
+        echo "Portkeeper $VER is installed at $BIN/portkeeper."
+      else
+        (nohup "$BIN/portkeeper" >/dev/null 2>&1 &); echo "Portkeeper $VER is installed at $BIN/portkeeper and running in your tray."
+      fi
       case ":$PATH:" in *":$BIN:"*) ;; *) echo "Tip: add $BIN to your PATH to run it as 'portkeeper'." ;; esac
       ;;
     *)
