@@ -103,8 +103,8 @@ ul { list-style: none; }
 .open > .row .chev .ico { transform: rotate(180deg); }
 
 .act { display: flex; align-items: center; gap: 1px; }
-.act.hov { display: none; }
-.row:hover .act.hov { display: flex; }
+.act.hov { visibility: hidden; } /* kept in the layout so the title does not reflow on hover */
+.row:hover .act.hov { visibility: visible; }
 .act button { height: 20px; min-width: 20px; padding: 0 5px; border-radius: 5px; color: var(--dim); font-size: 11px; display: grid; place-items: center; }
 .act .ico { width: 10px; height: 10px; }
 .act .ico.play { width: 11px; height: 11px; }
