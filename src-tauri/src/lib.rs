@@ -194,12 +194,21 @@ fn open_url(url: String) -> Result<(), String> {
 }
 
 const DONATE_URL: &str = "https://buymeacoffee.com/maparisidef";
+const RELEASE_URL: &str = "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v";
 
-/// The UI only ever opens a local port or the donation page; anything else is refused,
-/// so a compromised web view cannot send the browser to an arbitrary site.
+/// The UI only ever opens a local port, the donation page or one of Portkeeper's own
+/// release pages; anything else is refused, so a compromised web view cannot send the
+/// browser to an arbitrary site.
 fn is_allowed_url(url: &str) -> bool {
     if url == DONATE_URL {
         return true;
+    }
+    if let Some(version) = url.strip_prefix(RELEASE_URL) {
+        // Only a version after "tag/v": no "..", query or fragment that could point elsewhere.
+        return !version.is_empty()
+            && version
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-'));
     }
     let Some(rest) = url.strip_prefix("http://") else {
         return false;
@@ -223,6 +232,8 @@ mod url_tests {
             "http://127.0.0.1:8080/path?x=1",
             "http://[::1]:5173",
             super::DONATE_URL,
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v0.5.0",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v1.0.0-beta.1",
         ] {
             assert!(is_allowed_url(ok), "{ok}");
         }
@@ -235,6 +246,11 @@ mod url_tests {
             "javascript:alert(1)",
             "file:///etc/passwd",
             "https://buymeacoffee.com/someone-else",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v0.5.0/../../../evil",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases/tag/v0.5.0?x=1",
+            "https://github.com/MarcAparisiTFG/portkeeper/releases",
+            "https://github.com/someone-else/portkeeper/releases/tag/v0.5.0",
         ] {
             assert!(!is_allowed_url(bad), "{bad}");
         }

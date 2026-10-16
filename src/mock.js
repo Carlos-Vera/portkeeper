@@ -88,7 +88,7 @@ if (!window.__TAURI__) {
           }
           case "list_closed": return closed;
           case "fit_window": if (EMBED) parent.postMessage({ portkeeper: "height", value: args.height, theme: settings.theme }, "*"); return;
-          case "check_update": return Q.has("update") ? { version: "0.4.1", notes: "Faster scans" } : null;
+          case "check_update": return Q.has("update") ? { version: "0.5.0", notes: "### Added\n- **Forget all** under the Closed list, to clear it in one click.\n- One-command install for macOS, Linux and Windows.\n\n### Security\n- **Start again** runs the saved command as separate arguments, never through a shell.\n- Opening a port only ever opens `http://localhost:<port>`.\n\n---\nDownload the installer for your platform below." } : null;
           case "install_update": await new Promise((r) => setTimeout(r, 2500)); throw "Demo: nothing to install";
           case "probe_ports": return Object.fromEntries(args.ports.map(([p]) => [p, p !== 8001])); // 8001 "still booting"
           case "forget_closed": closed = closed.filter((c) => c.key !== args.key); return;
