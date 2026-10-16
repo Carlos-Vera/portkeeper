@@ -6,7 +6,7 @@ Thanks for helping! A few guidelines to keep things smooth.
 
 - **Anyone can open issues and pull requests.** Bug reports, ideas and fixes are all welcome.
 - **Only the maintainer merges and closes.** Every pull request needs a review from @MarcAparisiTFG (see `.github/CODEOWNERS`), and `main` only changes through reviewed pull requests.
-- **Licensing of contributions.** Portkeeper is under the PolyForm Noncommercial License 1.0.0. By opening a pull request you agree that your contribution is licensed under it, and that the maintainer may also include it in versions licensed commercially.
+- **Licensing of contributions.** Portkeeper is under the MIT License. By opening a pull request you agree that your contribution is licensed under it.
 
 ## Development setup
 

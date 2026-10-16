@@ -160,6 +160,8 @@ If Portkeeper saves you some `lsof` time, you can [buy me a coffee](https://buym
 
 ## License
 
-Free for personal and other noncommercial use under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). **Commercial use needs written permission**: ask on [LinkedIn](https://www.linkedin.com/in/marc-aparisi-rull-160bb71bb/) or open an issue.
+Portkeeper is fully open source under the [MIT License](LICENSE). You can use it, change it and share it, including commercially, as long as you keep the copyright notice.
+
+> **A note on the license change:** earlier versions were published under the PolyForm Noncommercial License, which I called "open source" at the time. I didn't fully understand the concept yet: a license that forbids commercial use isn't open source by the [Open Source Definition](https://opensource.org/osd). Portkeeper is now MIT, so it really is open source. Releases published before this change keep the license they shipped with.
 
 Logos come from [Simple Icons](https://simpleicons.org) (CC0) and belong to their respective owners.
