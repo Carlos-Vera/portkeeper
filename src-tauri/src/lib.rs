@@ -127,6 +127,15 @@ fn forget_closed(app: AppHandle, key: String) {
         .forget(&key);
 }
 
+/// Empty the Closed list in one go ("Forget all").
+#[tauri::command]
+fn forget_all_closed(app: AppHandle) {
+    app.state::<Mutex<launch::Tracker>>()
+        .lock()
+        .unwrap()
+        .forget_all();
+}
+
 /// True when the process runs from a locked project folder.
 fn pid_is_locked(store: &settings::Store, pid: u32) -> bool {
     ports::cwd_of(pid).is_some_and(|cwd| store.is_protected(&settings::key_for_cwd(&cwd)))
@@ -773,6 +782,7 @@ pub fn run() {
             list_closed,
             relaunch,
             forget_closed,
+            forget_all_closed,
             set_setting,
             set_theme,
             set_lang,

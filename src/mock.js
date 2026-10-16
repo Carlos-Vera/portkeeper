@@ -92,6 +92,7 @@ if (!window.__TAURI__) {
           case "install_update": await new Promise((r) => setTimeout(r, 2500)); throw "Demo: nothing to install";
           case "probe_ports": return Object.fromEntries(args.ports.map(([p]) => [p, p !== 8001])); // 8001 "still booting"
           case "forget_closed": closed = closed.filter((c) => c.key !== args.key); return;
+          case "forget_all_closed": closed = []; return;
           case "relaunch": {
             const c = closed.find((x) => x.key === args.key);
             setTimeout(() => {
