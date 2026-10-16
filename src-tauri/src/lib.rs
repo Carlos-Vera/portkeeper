@@ -10,7 +10,10 @@ use std::sync::Mutex;
 
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Rect, WebviewWindow};
+use tauri::{
+    AppHandle, LogicalPosition, LogicalSize, Manager, Monitor, PhysicalPosition, Rect,
+    WebviewWindow,
+};
 use tauri_plugin_autostart::ManagerExt as _;
 
 const WIDTH: f64 = 290.0;
@@ -582,42 +585,90 @@ fn hide(app: &AppHandle) {
 
 /// Place the widget next to the tray icon (below it on macOS, above it on a bottom taskbar).
 fn place_near(app: &AppHandle, win: &WebviewWindow, icon: Option<Rect>) {
-    let Some(icon) = icon.filter(|r| valid_rect(app, r)) else {
+    let Some((m, pos, size)) = icon.and_then(|r| tray_monitor(app, &r)) else {
         place_in_corner(app, win);
         return;
     };
-    let scale = win.scale_factor().unwrap_or(1.0);
-    let pos = icon.position.to_physical::<f64>(scale);
-    let size = icon.size.to_physical::<f64>(scale);
-    let Some(m) = app.monitor_from_point(pos.x, pos.y).ok().flatten() else {
-        return;
-    };
-    let (mx, my) = (m.position().x as f64, m.position().y as f64);
-    let (mw, mh) = (m.size().width as f64, m.size().height as f64);
-    let ws = win
-        .outer_size()
-        .map(|s| (s.width as f64, s.height as f64))
-        .unwrap_or((WIDTH * scale, 200.0));
-    let gap = 6.0 * scale;
-    let x = (pos.x + size.width / 2.0 - ws.0 / 2.0).clamp(mx + gap, mx + mw - ws.0 - gap);
-    let grow_up = pos.y > my + mh / 2.0;
+    let (mp, ms) = logical_bounds(&m);
+    let ws = window_size(win);
+    let gap = 6.0;
+    let x = (pos.x + size.width / 2.0 - ws.width / 2.0)
+        .clamp(mp.x + gap, mp.x + ms.width - ws.width - gap);
+    let grow_up = pos.y > mp.y + ms.height / 2.0;
+    // Under a top bar, hang from the bottom edge of the bar itself (the top of the work
+    // area): the icon rect macOS reports can sit lower than the icon really is.
+    let work_top = m.work_area().position.to_logical::<f64>(m.scale_factor()).y;
     let y = if grow_up {
-        pos.y - ws.1 - gap
+        pos.y - ws.height - gap
     } else {
-        pos.y + size.height + gap
+        work_top + gap
     };
     app.state::<GrowUp>().0.store(grow_up, Ordering::Relaxed);
-    let _ = win.set_position(PhysicalPosition::new(x.round() as i32, y.round() as i32));
+    move_to(win, LogicalPosition::new(x, y), m.scale_factor());
 }
 
+/// The screen the tray icon is on, with the icon rect in that screen's logical points.
+/// The rect comes in physical pixels of the icon's own screen, so with mixed scale factors
+/// (a Retina laptop plus a 1x monitor) each screen is checked with its own scale.
 /// Right after launch (or when the menu bar is full and the icon is hidden) macOS reports
-/// a placeholder rect at the bottom-left corner. Only trust rects that sit on a screen.
-fn valid_rect(app: &AppHandle, r: &Rect) -> bool {
-    let size = r.size.to_physical::<f64>(1.0);
-    let pos = r.position.to_physical::<f64>(1.0);
-    size.height > 0.0
-        && (pos.x, pos.y) != (0.0, 0.0)
-        && matches!(app.monitor_from_point(pos.x, pos.y), Ok(Some(_)))
+/// a placeholder rect at the bottom-left corner: that one matches no screen.
+fn tray_monitor(
+    app: &AppHandle,
+    r: &Rect,
+) -> Option<(Monitor, LogicalPosition<f64>, LogicalSize<f64>)> {
+    let raw = r.position.to_physical::<f64>(1.0);
+    if (raw.x, raw.y) == (0.0, 0.0) {
+        return None;
+    }
+    app.available_monitors().ok()?.into_iter().find_map(|m| {
+        let s = m.scale_factor();
+        let pos = r.position.to_logical::<f64>(s);
+        let size = r.size.to_logical::<f64>(s);
+        let (mp, ms) = logical_bounds(&m);
+        // The icon's centre: its top edge can sit a couple of points above the screen.
+        let (cx, cy) = (pos.x + size.width / 2.0, pos.y + size.height / 2.0);
+        let inside =
+            (mp.x..mp.x + ms.width).contains(&cx) && (mp.y..mp.y + ms.height).contains(&cy);
+        (inside && size.height > 0.0).then_some((m, pos, size))
+    })
+}
+
+fn logical_bounds(m: &Monitor) -> (LogicalPosition<f64>, LogicalSize<f64>) {
+    let s = m.scale_factor();
+    (m.position().to_logical(s), m.size().to_logical(s))
+}
+
+fn window_size(win: &WebviewWindow) -> LogicalSize<f64> {
+    let scale = win.scale_factor().unwrap_or(1.0);
+    win.outer_size()
+        .map(|s| s.to_logical(scale))
+        .unwrap_or(LogicalSize::new(WIDTH, 200.0))
+}
+
+/// macOS: move the panel now, in points. Tauri's `set_position` lands later on the main
+/// queue, after `native_show` has already read the frame to animate to, and a physical
+/// position would be divided by the scale of the screen the window is on now.
+#[cfg(target_os = "macos")]
+fn move_to(win: &WebviewWindow, p: LogicalPosition<f64>, _scale: f64) {
+    use objc2::MainThreadMarker;
+    use objc2_app_kit::{NSScreen, NSWindow};
+    use objc2_foundation::NSPoint;
+    let (Ok(ptr), Some(mtm)) = (win.ns_window(), MainThreadMarker::new()) else {
+        return;
+    };
+    // Cocoa counts y up from the bottom of the primary screen (the one with the menu bar).
+    let Some(primary) = NSScreen::screens(mtm).firstObject() else {
+        return;
+    };
+    // SAFETY: Tauri hands us the live NSWindow; MainThreadMarker proved the thread.
+    let ns: &NSWindow = unsafe { &*(ptr as *const NSWindow) };
+    ns.setFrameTopLeftPoint(NSPoint::new(p.x, primary.frame().size.height - p.y));
+}
+
+/// Windows and Linux position windows in pixels of the target screen.
+#[cfg(not(target_os = "macos"))]
+fn move_to(win: &WebviewWindow, p: LogicalPosition<f64>, scale: f64) {
+    let _ = win.set_position(p.to_physical::<i32>(scale));
 }
 
 /// No usable tray position: top-right corner on macOS, bottom-right elsewhere.
@@ -625,23 +676,18 @@ fn place_in_corner(app: &AppHandle, win: &WebviewWindow) {
     let Some(m) = win.primary_monitor().ok().flatten() else {
         return;
     };
-    let scale = m.scale_factor();
-    let ws = win
-        .outer_size()
-        .map(|s| (s.width as f64, s.height as f64))
-        .unwrap_or((WIDTH * scale, 200.0));
-    let (mx, my) = (m.position().x as f64, m.position().y as f64);
-    let (mw, mh) = (m.size().width as f64, m.size().height as f64);
-    let gap = 8.0 * scale;
-    let x = mx + mw - ws.0 - gap;
+    let (mp, ms) = logical_bounds(&m);
+    let ws = window_size(win);
+    let gap = 8.0;
+    let x = mp.x + ms.width - ws.width - gap;
     let grow_up = !cfg!(target_os = "macos");
     let y = if grow_up {
-        my + mh - ws.1 - 56.0 * scale
+        mp.y + ms.height - ws.height - 56.0
     } else {
-        my + 38.0 * scale
+        mp.y + 38.0
     };
     app.state::<GrowUp>().0.store(grow_up, Ordering::Relaxed);
-    let _ = win.set_position(PhysicalPosition::new(x.round() as i32, y.round() as i32));
+    move_to(win, LogicalPosition::new(x, y), m.scale_factor());
 }
 
 fn show(app: &AppHandle, icon: Option<Rect>) {
@@ -812,7 +858,7 @@ pub fn run() {
                             .rect()
                             .ok()
                             .flatten()
-                            .filter(|r| valid_rect(&handle, r));
+                            .filter(|r| tray_monitor(&handle, r).is_some());
                         if rect.is_some() {
                             break;
                         }
