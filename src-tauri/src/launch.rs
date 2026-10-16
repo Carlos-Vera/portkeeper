@@ -364,14 +364,21 @@ mod tests {
         .map(|s| s.to_string())
         .collect();
         super::spawn_detached(&argv, dir.to_str().unwrap(), None, &log).unwrap();
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
-        while std::fs::read_to_string(&log).map_or(true, |s| s.is_empty()) {
-            assert!(std::time::Instant::now() < deadline, "printf never ran");
+        // A login shell may first write warnings of its own to the log (bash without a
+        // tty does), so wait for printf's output itself, not just for any output.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+        let out = loop {
+            let out = std::fs::read_to_string(&log).unwrap_or_default();
+            if out.contains("x; touch") {
+                break out;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "printf never ran; log so far: {out}"
+            );
             std::thread::sleep(std::time::Duration::from_millis(50));
-        }
+        };
         std::thread::sleep(std::time::Duration::from_millis(200));
-        let out = std::fs::read_to_string(&log).unwrap();
-        assert!(out.contains("x; touch"), "argument passed verbatim: {out}");
         assert!(out.contains("$(id)"), "no command substitution: {out}");
         assert!(!marker.exists(), "an argument must never be executed");
         let _ = std::fs::remove_dir_all(&dir);

