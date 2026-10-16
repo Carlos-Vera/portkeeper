@@ -9,9 +9,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follo
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-16
+
 ### Added
+- **What's new**: when an update is available, click the message to read what changed before installing.
 - **Forget all** under the Closed list, to clear it in one click instead of one row at a time.
-- One-command install for macOS, Linux and Windows from the website.
+- One-command install for macOS, Linux and Windows from the website, which now also shows what's new in the latest version.
 
 ### Changed
 - The widget opens centred under the tray icon on setups with screens of different scale (a Retina laptop plus a 1x monitor), and in the right place right after launch.
@@ -55,7 +58,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follo
 ### Added
 - First public release: every listening port and Docker container, grouped by project, with the logo of the agent or IDE that started it. Open, stop or kill with one click. Closed tab to start projects again. Project locks. Five languages.
 
-[Unreleased]: https://github.com/MarcAparisiTFG/portkeeper/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/MarcAparisiTFG/portkeeper/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/MarcAparisiTFG/portkeeper/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/MarcAparisiTFG/portkeeper/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/MarcAparisiTFG/portkeeper/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/MarcAparisiTFG/portkeeper/compare/v0.2.0...v0.3.0
