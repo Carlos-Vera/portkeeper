@@ -37,10 +37,16 @@ pub fn responds(port: u16, tech: Option<&str>) -> bool {
     matches!(s.read(&mut buf), Ok(n) if n > 0)
 }
 
+/// More ports than any machine shows at once; keeps one-thread-per-port bounded.
+const MAX_PROBES: usize = 256;
+
 /// Probe many ports at once; bounded by the longest single probe, not their sum.
 pub fn probe_all(ports: &[(u16, Option<String>)]) -> HashMap<u16, bool> {
+    let mut seen = std::collections::HashSet::new();
     let handles: Vec<_> = ports
         .iter()
+        .filter(|(port, _)| seen.insert(*port))
+        .take(MAX_PROBES)
         .cloned()
         .map(|(port, tech)| std::thread::spawn(move || (port, responds(port, tech.as_deref()))))
         .collect();
