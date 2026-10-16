@@ -136,7 +136,7 @@ pnpm build    # installers in src-tauri/target/release/bundle/
 
 `site/` is the one-page website. `pnpm run site` copies the app UI into it as a live demo; `pnpm run deploy:site` publishes it to Cloudflare Pages (run `pnpm dlx wrangler@4.151.0 login` once first).
 
-Releases are built by GitHub Actions when a `v*` tag is pushed. Bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml` first. The workflow signs the update bundles with the `TAURI_SIGNING_PRIVATE_KEY` secret and publishes `latest.json`, which installed copies read to find the update.
+Releases are built by GitHub Actions when a `v*` tag is pushed. First bump the version in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`, and move the **Unreleased** notes in [CHANGELOG.md](CHANGELOG.md) under the new version: that section becomes the release notes and the text the app shows when it offers the update (the workflow refuses a tag without one). The workflow signs the update bundles with the `TAURI_SIGNING_PRIVATE_KEY` secret and publishes `latest.json`, which installed copies read to find the update.
 
 ## Contributing
 
