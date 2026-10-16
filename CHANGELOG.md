@@ -16,6 +16,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follo
 ### Changed
 - The widget opens centred under the tray icon on setups with screens of different scale (a Retina laptop plus a 1x monitor), and in the right place right after launch.
 - Rows and cards no longer jump on hover.
+- Linux: the widget opens in the top-right corner on desktops with a top panel (GNOME, Ubuntu, elementary), instead of the bottom-right.
+- Windows: with the taskbar on the left or right, the widget opens beside it instead of on top of it.
 - Portkeeper is now fully open source under the MIT license.
 
 ### Security
