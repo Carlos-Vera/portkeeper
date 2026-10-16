@@ -39,6 +39,10 @@ struct SettingsDto {
 
 type SettingsState = Mutex<settings::Store>;
 
+/// PIDs in the last `list_ports` scan: the only ones the web view may stop.
+#[derive(Default)]
+struct ScannedPids(Mutex<std::collections::HashSet<u32>>);
+
 const LOCKED: &str = "This project is locked in Portkeeper. Unlock it to stop it.";
 
 // ---------- commands (called from the web view) ----------
@@ -96,6 +100,7 @@ async fn install_update(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 async fn list_ports(app: AppHandle) -> Result<Vec<ports::PortInfo>, String> {
     let list = ports::list()?;
+    *app.state::<ScannedPids>().0.lock().unwrap() = list.iter().map(|p| p.pid).collect();
     if let Some(t) = app.try_state::<Mutex<launch::Tracker>>() {
         t.lock().unwrap().update(&list);
     }
@@ -134,6 +139,9 @@ fn pid_is_locked(store: &settings::Store, pid: u32) -> bool {
 
 #[tauri::command]
 async fn kill_process(app: AppHandle, pid: u32, force: bool) -> Result<(), String> {
+    if !app.state::<ScannedPids>().0.lock().unwrap().contains(&pid) {
+        return Err("That process is no longer in the list.".into());
+    }
     // Enforced here too, not only in the UI.
     if pid_is_locked(&app.state::<SettingsState>().lock().unwrap(), pid) {
         return Err(LOCKED.into());
@@ -759,6 +767,7 @@ pub fn run() {
             None,
         ))
         .manage(GrowUp(AtomicBool::new(false)))
+        .manage(ScannedPids::default())
         .invoke_handler(tauri::generate_handler![
             list_ports,
             kill_process,
