@@ -31,8 +31,8 @@ libc = "0.2"
 window-vibrancy = "0.6"
 tauri-nspanel = "2.1"
 objc2 = "0.6"
-objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSWindow", "NSResponder", "NSAnimationContext", "NSView", "NSGlassEffectView", "NSGraphics", "NSColor"] }
-objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSGeometry"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSWindow", "NSResponder", "NSAnimationContext", "NSView", "NSGlassEffectView", "NSGraphics", "NSColor", "NSScreen"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSGeometry", "NSArray"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_Graphics_Dwm"] }
