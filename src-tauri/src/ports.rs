@@ -672,6 +672,11 @@ fn alive(pid: u32) -> bool {
 /// `GRACE`, kill it. `force` skips the polite step.
 pub fn kill(pid: u32, force: bool) -> Result<(), String> {
     const GRACE: std::time::Duration = std::time::Duration::from_millis(1500);
+    // On Unix 0 and anything that wraps to a negative i32 signal whole process groups
+    // (-1: every process of the user). Never ourselves either.
+    if pid == 0 || pid == 1 || pid > i32::MAX as u32 || pid == std::process::id() {
+        return Err(format!("Refusing to stop process {pid}."));
+    }
     if !force {
         signal(pid, false)?;
         let deadline = std::time::Instant::now() + GRACE;
@@ -731,6 +736,14 @@ mod tests {
 
     fn v(s: &[&str]) -> Vec<String> {
         s.iter().map(|x| x.to_string()).collect()
+    }
+
+    /// PIDs that would hit a whole process group, init or Portkeeper itself are refused.
+    #[test]
+    fn kill_refuses_dangerous_pids() {
+        for pid in [0, 1, u32::MAX, i32::MAX as u32 + 1, std::process::id()] {
+            assert!(super::kill(pid, true).is_err(), "pid {pid}");
+        }
     }
 
     /// A process that ignores SIGTERM is still stopped (escalation). Spawns python3.
