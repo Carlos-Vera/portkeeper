@@ -79,7 +79,7 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
           # latest.json, read by the in-app updater; Windows updates through the .exe installer.
-          includeUpdaterJson: true
+          uploadUpdaterJson: true
           updaterJsonPreferNsis: true
 
   # Copies of the main installers with version-free names, so
