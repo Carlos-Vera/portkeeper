@@ -70,8 +70,8 @@ h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 600; letter-spacing: -.03em
 .card { margin: 36px auto 0; max-width: 520px; }
 .dl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .btn { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px; text-align: left;
-  border: 1px solid var(--line); background: var(--bg); transition: border-color .15s, transform .15s, box-shadow .15s; }
-.btn:hover { border-color: var(--strong); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0, 0, 0, .06); }
+  border: 1px solid var(--line); background: var(--bg); transition: border-color .15s, box-shadow .15s; }
+.btn:hover { border-color: var(--strong); box-shadow: 0 6px 16px rgba(0, 0, 0, .06); }
 .btn svg { width: 26px; height: 26px; flex: none; }
 .btn span { display: flex; flex-direction: column; }
 .btn.here { background: var(--fg); color: var(--on-fg); border-color: var(--fg); }
